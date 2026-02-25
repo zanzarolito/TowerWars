@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower Wars — Jeu de Cartes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --bg: #0d0d0f;
+  --bg2: #13131a;
+  --bg3: #1a1a24;
+  --border: #2a2a3a;
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --blue2: #2980b9;
+  --green2: #27ae60;
+  --text: #e8e0d0;
+  --text2: #a09080;
+  --cw: 68px;
+  --ch: 96px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+.screen { display:none; min-height:100vh; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* SETUP */
+#setup-screen { align-items:center; justify-content:center; background:radial-gradient(ellipse at 50% 30%,#1a1224 0%,#0d0d0f 70%); position:relative; overflow:hidden; }
+#setup-screen::before { content:''; position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(201,168,76,0.03) 40px,rgba(201,168,76,0.03) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(201,168,76,0.03) 40px,rgba(201,168,76,0.03) 41px); }
+.setup-box { background:var(--bg2); border:1px solid var(--border); border-top:3px solid var(--gold); padding:44px 52px; width:500px; box-shadow:0 20px 80px rgba(0,0,0,0.6); position:relative; }
+.title-main { font-family:'Cinzel',serif; font-size:46px; font-weight:900; color:var(--gold2); text-align:center; letter-spacing:4px; line-height:1; text-shadow:0 0 40px rgba(201,168,76,0.3); }
+.title-sub { font-family:'Cinzel',serif; font-size:12px; color:var(--text2); text-align:center; letter-spacing:8px; margin-top:6px; margin-bottom:32px; }
+.setup-section { margin-bottom:22px; }
+.setup-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--gold); margin-bottom:10px; }
+.player-count-btns { display:flex; gap:8px; }
+.cnt-btn { flex:1; padding:12px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); font-family:'Cinzel',serif; font-size:18px; cursor:pointer; transition:all 0.2s; }
+.cnt-btn:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); }
+.cnt-btn.active { background:rgba(201,168,76,0.1); border-color:var(--gold); color:var(--gold2); }
+.cnt-btn:disabled { opacity:0.25; cursor:not-allowed; }
+.player-names { display:flex; flex-direction:column; gap:8px; }
+.player-name-row { display:flex; align-items:center; gap:10px; }
+.player-color-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.name-input { flex:1; background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:8px 12px; font-family:'Crimson Text',serif; font-size:16px; outline:none; transition:border-color 0.2s; }
+.name-input:focus { border-color:var(--gold); }
+.ai-toggle { padding:6px 10px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); font-size:13px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.ai-toggle.ai-active { border-color:var(--blue2); color:var(--blue2); background:rgba(41,128,185,0.1); }
+.btn-start { width:100%; padding:16px; background:linear-gradient(135deg,#8b6914,#c9a84c); border:none; color:#0d0d0f; font-family:'Cinzel',serif; font-size:16px; font-weight:700; letter-spacing:3px; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+.btn-start:hover { background:linear-gradient(135deg,#c9a84c,#e8c96a); transform:translateY(-1px); }
+.rules-toggle { text-align:center; margin-top:16px; color:var(--text2); font-size:14px; cursor:pointer; text-decoration:underline; }
+.rules-panel { background:var(--bg3); border:1px solid var(--border); padding:18px; margin-top:12px; font-size:14px; line-height:1.7; display:none; max-height:280px; overflow-y:auto; }
+.rules-panel.open { display:block; }
+.rules-panel h4 { font-family:'Cinzel',serif; color:var(--gold); font-size:11px; letter-spacing:2px; margin:12px 0 5px; }
+.rules-panel p { color:var(--text2); margin-bottom:4px; }
+.rules-panel strong { color:var(--text); }
+
+/* GAME */
+#game-screen { background:#0a0a10; flex-direction:column; min-height:100vh; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
+.topbar-title { font-family:'Cinzel',serif; font-size:18px; color:var(--gold); letter-spacing:3px; }
+.turn-info { font-family:'Cinzel',serif; font-size:13px; color:var(--text2); }
+.turn-info span { color:var(--gold2); }
+.btn-sm { background:none; border:1px solid var(--border); color:var(--text2); padding:6px 14px; font-size:13px; cursor:pointer; font-family:'Crimson Text',serif; transition:all 0.2s; }
+.btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+
+/* GAME AREA */
+.game-area { flex:1; display:grid; gap:10px; padding:12px 12px 96px; overflow:auto; }
+.game-area.p2 { grid-template-areas:"top" "bottom"; grid-template-rows:1fr 1fr; }
+.game-area.p3 { grid-template-areas:"top top" "left bottom"; grid-template-rows:1fr 1fr; grid-template-columns:1fr 1fr; }
+.game-area.p4 { grid-template-areas:". top ." "left . right" ". bottom ."; grid-template-rows:1fr 1fr 1fr; grid-template-columns:1fr 1fr 1fr; }
+
+/* PLAYER ZONE */
+.player-zone { border:1px solid var(--border); background:var(--bg2); border-radius:4px; padding:12px 14px; position:relative; transition:border-color 0.3s,box-shadow 0.3s; display:flex; flex-direction:column; gap:8px; }
+.player-zone[data-pos="top"]    { grid-area:top; }
+.player-zone[data-pos="bottom"] { grid-area:bottom; }
+.player-zone[data-pos="left"]   { grid-area:left; }
+.player-zone[data-pos="right"]  { grid-area:right; }
+.player-zone.current-turn { border-color:var(--gold); box-shadow:0 0 20px rgba(201,168,76,0.12); }
+.player-zone.eliminated { opacity:0.35; filter:grayscale(1); }
+.player-zone.p0.current-turn { border-color:#c9a84c; box-shadow:0 0 20px rgba(201,168,76,0.15); }
+.player-zone.p1.current-turn { border-color:#2980b9; box-shadow:0 0 20px rgba(41,128,185,0.15); }
+.player-zone.p2.current-turn { border-color:#27ae60; box-shadow:0 0 20px rgba(39,174,96,0.15); }
+.player-zone.p3.current-turn { border-color:#8e44ad; box-shadow:0 0 20px rgba(142,68,173,0.15); }
+
+/* ZONE HEADER */
+.pz-header { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.pz-name { font-family:'Cinzel',serif; font-size:13px; font-weight:600; padding:2px 10px; border-left:3px solid; letter-spacing:1px; }
+.p0 .pz-name { border-color:#c9a84c; color:#c9a84c; }
+.p1 .pz-name { border-color:#2980b9; color:#2980b9; }
+.p2 .pz-name { border-color:#27ae60; color:#27ae60; }
+.p3 .pz-name { border-color:#8e44ad; color:#8e44ad; }
+.pz-tag { font-size:12px; color:var(--text2); }
+.pz-active { font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; color:var(--gold); background:rgba(201,168,76,0.1); padding:2px 8px; border:1px solid rgba(201,168,76,0.3); margin-left:auto; }
+
+/* ── CARD LAYOUT matching the sketch ──
+   Left block:
+     [DÉFENSE]
+     [TOUR1] [TOUR2]
+   Right block (separator):
+     [+CHARGE] [ATTAQUE piochée]   (charge derrière, attaque devant)
+*/
+.pz-body { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+
+.pz-left { display:flex; flex-direction:column; gap:6px; }
+.zone-lbl { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--text2); margin-bottom:2px; }
+.zone-lbl.lbl-def { color:#5b8dd4; }
+.zone-lbl.lbl-atk { color:var(--red2); }
+.zone-lbl.lbl-chg { color:#8e44ad; }
+.zone-val { font-family:'Cinzel',serif; font-size:12px; font-weight:600; margin-top:4px; }
+.zone-val.gold { color:var(--gold); }
+.zone-val.blue { color:#5b8dd4; }
+.zone-val.red  { color:var(--red2); }
+
+.pz-defense-block { display:flex; flex-direction:column; }
+.pz-towers-block  { display:flex; flex-direction:column; }
+.towers-cards     { display:flex; gap:6px; }
+
+.pz-right { display:flex; flex-direction:column; gap:6px; border-left:1px solid var(--border); padding-left:16px; margin-left:4px; }
+.attack-block { display:flex; flex-direction:column; }
+
+/* attack stack: charge behind, drawn on top */
+.atk-stack { position:relative; }
+.atk-stack .behind { position:absolute; top:-6px; left:-6px; z-index:1; }
+.atk-stack .front  { position:relative; z-index:2; }
+
+/* CARDS */
+.card { width:var(--cw); height:var(--ch); border-radius:6px; border:1px solid #333; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; font-family:'Crimson Text',serif; user-select:none; flex-shrink:0; }
+.card.face-up { background:#f8f4e8; color:#111; }
+.card.face-up.hearts,.card.face-up.diamonds { color:#c0392b; }
+.card.face-up.spades,.card.face-up.clubs { color:#1a1a2a; }
+.card-corner { position:absolute; font-size:12px; font-weight:700; line-height:1; display:flex; flex-direction:column; align-items:center; gap:1px; }
+.card-corner.tl { top:4px; left:5px; }
+.card-corner.br { bottom:4px; right:5px; transform:rotate(180deg); }
+.card-suit-c { font-size:24px; line-height:1; }
+.card.tower { border-width:2px; }
+.card.damaged { border-color:var(--red2); box-shadow:0 0 8px rgba(231,76,60,0.4); }
+.card.def-card { border-color:#5b8dd4; box-shadow:0 0 8px rgba(91,141,212,0.25); }
+.card.charge-card { border:2px dashed #8e44ad; box-shadow:0 0 8px rgba(142,68,173,0.35); }
+.card.drawn-card { border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,0.3); }
+.card.empty { border:1px dashed #2a2a3a; background:transparent; opacity:0.2; }
+
+.ai-thinking { font-family:'Cinzel',serif; font-size:11px; color:var(--text2); letter-spacing:2px; animation:blink 1s infinite; padding:8px 0; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ACTION PANEL */
+.action-panel { position:fixed; bottom:0; left:0; right:0; background:var(--bg2); border-top:2px solid var(--gold); padding:12px 20px; display:flex; align-items:center; gap:14px; z-index:100; flex-wrap:wrap; }
+.ap-lbl { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--gold); flex-shrink:0; }
+.ap-desc { font-size:15px; color:var(--text2); flex:1; min-width:160px; }
+.ap-desc strong { color:var(--text); }
+.ap-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.btn-act { padding:9px 18px; border:1px solid; font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; background:transparent; }
+.btn-act.atk { border-color:var(--red2); color:var(--red2); }
+.btn-act.atk:hover { background:rgba(231,76,60,0.1); }
+.btn-act.def { border-color:var(--blue2); color:var(--blue2); }
+.btn-act.def:hover { background:rgba(41,128,185,0.1); }
+.btn-act.chg { border-color:#8e44ad; color:#9b59b6; }
+.btn-act.chg:hover { background:rgba(155,89,182,0.1); }
+.btn-act:disabled { opacity:0.3; cursor:not-allowed; }
+
+/* OVERLAYS */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; padding:20px; }
+.overlay.open { display:flex; }
+.ovbox { background:var(--bg2); border:1px solid var(--gold); padding:28px 32px; min-width:340px; max-width:540px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.8); }
+.ovbox.red-border { border-color:var(--red2); }
+.ov-title { font-family:'Cinzel',serif; font-size:13px; letter-spacing:3px; color:var(--gold); margin-bottom:18px; }
+.ov-title.red { color:var(--red2); }
+.ov-info { font-size:15px; color:var(--text2); margin-bottom:18px; line-height:1.7; }
+.ov-info strong { color:var(--text); }
+
+/* target */
+.tgt-list { display:flex; flex-direction:column; gap:8px; }
+.tgt-btn { padding:13px 18px; background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:'Crimson Text',serif; font-size:17px; cursor:pointer; transition:all 0.2s; text-align:left; display:flex; justify-content:space-between; align-items:center; }
+.tgt-btn:hover { border-color:var(--red2); background:rgba(231,76,60,0.07); }
+.tgt-preview { font-size:13px; color:var(--text2); }
+.ov-cancel { margin-top:12px; width:100%; padding:10px; background:none; border:1px solid var(--border); color:var(--text2); font-family:'Crimson Text',serif; font-size:15px; cursor:pointer; }
+.ov-cancel:hover { border-color:var(--text2); }
+
+/* damage */
+.dmg-towers { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.dmg-tbtn { flex:1; min-width:110px; padding:12px; background:var(--bg3); border:2px solid var(--border); color:var(--text); cursor:default; text-align:center; }
+.dmg-tbtn .dtv { font-family:'Cinzel',serif; font-size:22px; color:var(--gold); }
+.dmg-tbtn .dtn { font-size:12px; color:var(--text2); margin-top:2px; }
+.dmg-tbtn .dtd { font-size:13px; color:var(--red2); margin-top:3px; min-height:18px; }
+.dmg-controls { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.dmg-cbtn { flex:1; min-width:120px; padding:8px 10px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); font-family:'Crimson Text',serif; font-size:14px; cursor:pointer; transition:all 0.2s; text-align:left; }
+.dmg-cbtn:hover:not(:disabled) { border-color:var(--red2); color:var(--text); }
+.dmg-cbtn:disabled { opacity:0.3; cursor:not-allowed; }
+.dmg-rem { font-family:'Cinzel',serif; font-size:12px; color:var(--gold); text-align:center; margin-bottom:14px; }
+.btn-confirm { width:100%; padding:13px; background:linear-gradient(135deg,#8b2020,#c0392b); border:none; color:white; font-family:'Cinzel',serif; font-size:12px; letter-spacing:2px; cursor:pointer; transition:all 0.2s; }
+.btn-confirm:hover:not(:disabled) { background:linear-gradient(135deg,#c0392b,#e74c3c); }
+.btn-confirm:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* rules modal */
+.modal-box { background:var(--bg2); border:1px solid var(--gold); padding:36px; max-width:620px; width:100%; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.8); }
+.modal-title { font-family:'Cinzel',serif; font-size:22px; color:var(--gold2); margin-bottom:20px; letter-spacing:2px; }
+.modal-box h4 { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--gold); margin:16px 0 6px; }
+.modal-box p { color:var(--text2); font-size:16px; line-height:1.7; }
+.modal-box strong { color:var(--text); }
+.modal-close { display:block; margin-top:20px; padding:12px; background:none; border:1px solid var(--border); color:var(--text2); width:100%; font-family:'Crimson Text',serif; font-size:16px; cursor:pointer; }
+.modal-close:hover { border-color:var(--gold); color:var(--gold); }
+
+/* winner */
+#winner-screen { align-items:center; justify-content:center; background:radial-gradient(ellipse at 50% 40%,#1a1020 0%,#0d0d0f 70%); }
+.winner-box { text-align:center; padding:60px; }
+.w-lbl { font-family:'Cinzel',serif; font-size:13px; letter-spacing:6px; color:var(--text2); margin-bottom:14px; }
+.w-name { font-family:'Cinzel',serif; font-size:52px; font-weight:900; color:var(--gold2); text-shadow:0 0 60px rgba(201,168,76,0.4); margin-bottom:8px; }
+.w-sub { font-size:18px; color:var(--text2); font-style:italic; margin-bottom:44px; }
+.btn-restart { padding:15px 48px; background:none; border:2px solid var(--gold); color:var(--gold); font-family:'Cinzel',serif; font-size:13px; letter-spacing:4px; cursor:pointer; transition:all 0.3s; }
+.btn-restart:hover { background:rgba(201,168,76,0.1); }
+
+/* log */
+.log-panel { position:fixed; right:0; top:48px; bottom:80px; width:250px; background:var(--bg2); border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:50; transform:translateX(100%); transition:transform 0.3s; }
+.log-panel.open { transform:translateX(0); }
+.log-header { padding:10px 14px; border-bottom:1px solid var(--border); font-family:'Cinzel',serif; font-size:10px; letter-spacing:3px; color:var(--gold); }
+.log-entries { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:5px; }
+.log-entry { font-size:13px; color:var(--text2); line-height:1.5; padding-bottom:5px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.log-entry strong { color:var(--text); }
+.log-entry.atk { border-left:2px solid var(--red2); padding-left:6px; }
+.log-entry.def { border-left:2px solid var(--blue2); padding-left:6px; }
+.log-entry.chg { border-left:2px solid #8e44ad; padding-left:6px; }
+.log-entry.eli { border-left:2px solid var(--gold); padding-left:6px; color:var(--gold); }
+.log-toggle { position:fixed; right:16px; top:56px; background:var(--bg2); border:1px solid var(--border); color:var(--text2); padding:5px 11px; font-size:12px; cursor:pointer; z-index:60; font-family:'Crimson Text',serif; transition:all 0.2s; }
+.log-toggle:hover { border-color:var(--gold); color:var(--gold); }
+
+/* notif */
+.notif { position:fixed; top:58px; left:50%; transform:translateX(-50%) translateY(-16px); background:var(--bg2); border:1px solid var(--gold); padding:10px 22px; font-family:'Cinzel',serif; font-size:12px; letter-spacing:1px; color:var(--gold2); z-index:500; opacity:0; transition:all 0.3s; pointer-events:none; max-width:380px; text-align:center; }
+.notif.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.notif.err  { border-color:var(--red2); color:var(--red2); }
+.notif.ok   { border-color:var(--green2); color:var(--green2); }
+
+.player-color-dot.p0{background:#c9a84c} .player-color-dot.p1{background:#2980b9} .player-color-dot.p2{background:#27ae60} .player-color-dot.p3{background:#8e44ad}
+::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── ANIMATIONS ── */
+
+/* Card deal: slides in from top */
+@keyframes cardDeal {
+  from { opacity:0; transform:translateY(-18px) scale(0.92); }
+  to   { opacity:1; transform:translateY(0)     scale(1); }
+}
+.card-deal { animation: cardDeal 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+/* Card damage flash */
+@keyframes cardDamage {
+  0%   { filter:brightness(1); }
+  30%  { filter:brightness(2.5) saturate(0); box-shadow:0 0 20px rgba(231,76,60,0.8); }
+  100% { filter:brightness(1); }
+}
+.card-hit { animation: cardDamage 0.5s ease both; }
+
+/* Zone target highlight */
+@keyframes zoneTarget {
+  0%,100% { box-shadow:0 0 0 rgba(231,76,60,0); }
+  50%     { box-shadow:0 0 30px 4px rgba(231,76,60,0.5); }
+}
+.zone-targeted { animation: zoneTarget 0.6s ease 2; border-color:var(--red2) !important; }
+
+/* Zone defend flash */
+@keyframes zoneDefend {
+  0%,100% { box-shadow:0 0 0 rgba(41,128,185,0); }
+  50%     { box-shadow:0 0 30px 4px rgba(41,128,185,0.5); }
+}
+.zone-defended { animation: zoneDefend 0.6s ease 2; border-color:var(--blue2) !important; }
+
+/* Zone charge flash */
+@keyframes zoneCharge {
+  0%,100% { box-shadow:0 0 0 rgba(142,68,173,0); }
+  50%     { box-shadow:0 0 30px 4px rgba(142,68,173,0.5); }
+}
+.zone-charging { animation: zoneCharge 0.6s ease 2; border-color:#8e44ad !important; }
+
+/* EVENT BANNER — central flash for key moments */
+#event-banner {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0.8);
+  background:var(--bg2);
+  border:2px solid var(--gold);
+  padding:20px 40px;
+  font-family:'Cinzel',serif;
+  font-size:18px;
+  letter-spacing:2px;
+  color:var(--gold2);
+  z-index:600;
+  opacity:0;
+  pointer-events:none;
+  text-align:center;
+  max-width:480px;
+  box-shadow:0 10px 60px rgba(0,0,0,0.8);
+  transition:none;
+  white-space:nowrap;
+}
+#event-banner.show {
+  animation: bannerIn 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+#event-banner.hide {
+  animation: bannerOut 0.2s ease forwards;
+}
+@keyframes bannerIn {
+  from { opacity:0; transform:translate(-50%,-50%) scale(0.8); }
+  to   { opacity:1; transform:translate(-50%,-50%) scale(1); }
+}
+@keyframes bannerOut {
+  from { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  to   { opacity:0; transform:translate(-50%,-50%) scale(0.9); }
+}
+#event-banner.atk  { border-color:var(--red2);  color:var(--red2); }
+#event-banner.def  { border-color:var(--blue2); color:var(--blue2); }
+#event-banner.chg  { border-color:#8e44ad;      color:#b07fd4; }
+#event-banner.blk  { border-color:var(--blue2); color:var(--blue2); }
+#event-banner.eli  { border-color:var(--gold);  color:var(--gold2); }
+#event-banner .banner-sub {
+  display:block;
+  font-size:12px;
+  letter-spacing:3px;
+  color:var(--text2);
+  margin-top:6px;
+  font-family:'Crimson Text',serif;
+}
+
+/* AI STEP PANEL — shows inside action panel during AI turn */
+.ai-step {
+  font-family:'Cinzel',serif;
+  font-size:13px;
+  letter-spacing:1px;
+  color:var(--text2);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.ai-step .ai-card-preview {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:50px;
+  border-radius:4px;
+  border:1px solid var(--gold);
+  background:#f8f4e8;
+  font-family:'Crimson Text',serif;
+  font-size:15px;
+  font-weight:700;
+  color:#111;
+  flex-shrink:0;
+  animation: cardDeal 0.3s ease both;
+}
+.ai-step .ai-card-preview.hearts,.ai-step .ai-card-preview.diamonds { color:#c0392b; }
+.ai-step strong { color:var(--text); }
+
+/* Log toggle badge when new event */
+.log-toggle.new-event {
+  border-color:var(--gold);
+  color:var(--gold);
+  animation: logPulse 0.8s ease 3;
+}
+@keyframes logPulse {
+  0%,100% { box-shadow:none; }
+  50%     { box-shadow:0 0 12px rgba(201,168,76,0.5); }
+}
+/* PACT */
+.pact-badge { display:inline-flex; align-items:center; gap:5px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:1px; color:#e8a020; background:rgba(232,160,32,0.1); border:1px solid rgba(232,160,32,0.4); padding:2px 8px; border-radius:2px; }
+@keyframes zonePact { 0%,100%{box-shadow:0 0 0 rgba(232,160,32,0)} 50%{box-shadow:0 0 24px 4px rgba(232,160,32,0.4)} }
+.zone-pacted { border-color:#e8a020 !important; animation:zonePact 2s ease infinite; }
+.option-row { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--bg3); border:1px solid var(--border); margin-top:8px; transition:border-color 0.2s; }
+.option-row:hover { border-color:var(--gold); }
+.option-row input[type=checkbox] { width:16px; height:16px; accent-color:var(--gold); cursor:pointer; flex-shrink:0; margin-top:3px; }
+.option-row label { font-family:'Crimson Text',serif; font-size:15px; color:var(--text2); flex:1; }
+.option-row label strong { color:var(--text); }
+.option-sub { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.opt-radio { display:flex; align-items:center; gap:6px; padding:5px 10px; background:var(--bg); border:1px solid var(--border); cursor:pointer; font-size:13px; color:var(--text2); transition:all 0.2s; flex:1; white-space:nowrap; }
+.opt-radio:hover { border-color:var(--gold); color:var(--text); }
+.opt-radio input { accent-color:var(--gold); cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP ═══ -->
+<div id="setup-screen" class="screen active">
+  <div class="setup-box">
+    <div class="title-main">TOWER WARS</div>
+    <div class="title-sub">JEU DE CARTES STRATÉGIQUE</div>
+    <div class="setup-section">
+      <div class="setup-label">Nombre de joueurs (min. 2)</div>
+      <div class="player-count-btns">
+        <button class="cnt-btn" data-count="1" disabled>1</button>
+        <button class="cnt-btn active" data-count="2">2</button>
+        <button class="cnt-btn" data-count="3">3</button>
+        <button class="cnt-btn" data-count="4">4</button>
+      </div>
+    </div>
+    <div class="setup-section">
+      <div class="setup-label">Joueurs</div>
+      <div class="player-names" id="player-names-setup"></div>
+    </div>
+    <button class="btn-start" onclick="startGame()">⚔ COMMENCER LA PARTIE</button>
+
+    <div class="setup-section" style="margin-top:16px">
+      <div class="setup-label">Options de jeu</div>
+      <div class="option-row">
+        <input type="checkbox" id="opt-pact" onchange="togglePactOptions()">
+        <label for="opt-pact">
+          <strong>🤝 Pacte de non-agression</strong><br>
+          <span style="font-size:13px">Un joueur réduit à 1 seule tour peut proposer un pacte (2 tours) à un adversaire.</span>
+          <div class="option-sub" id="pact-sub" style="display:none">
+            <label class="opt-radio" id="pact-opt-block">
+              <input type="radio" name="pact-breach" value="block" checked onchange="setPactBreach(this)"> Rupture impossible
+            </label>
+            <label class="opt-radio" id="pact-opt-penalty">
+              <input type="radio" name="pact-breach" value="penalty" onchange="setPactBreach(this)"> Rupture = défense perdue
+            </label>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div class="rules-toggle" onclick="document.getElementById('setup-rules').classList.toggle('open')">📖 Voir les règles</div>
+    <div class="rules-panel" id="setup-rules">
+      <h4>OBJECTIF</h4>
+      <p>Détruire les tours de tous vos adversaires. Dernier survivant gagne.</p>
+      <h4>MISE EN PLACE</h4>
+      <p>Chaque joueur pioche 4 cartes, garde les 2 meilleures comme <strong>tours</strong>. Il pioche ensuite 1 carte <strong>défense</strong>.</p>
+      <h4>SON TOUR</h4>
+      <p><strong>⚔ Attaquer</strong> — carte piochée + carte chargée (si elle existe). Si Attaque &gt; Défense : Dégâts = Attaque − Défense. La défense est détruite.</p>
+      <p><strong>🛡 Défendre</strong> — Remplacer sa carte défense par la carte piochée.</p>
+      <p><strong>⚡ Charger</strong> — Mettre la carte de côté (<strong>1 seule charge</strong>). Elle est ajoutée à la prochaine attaque.</p>
+      <h4>DÉGÂTS</h4>
+      <p>Les dégâts s'appliquent automatiquement sur la <strong>tour la plus haute</strong> en premier. Si une charge était en cours, elle est perdue. Les cartes tours sont remplacées par la valeur restante.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="game-screen" class="screen">
+  <div class="topbar">
+    <div class="topbar-title">⚔ TOWER WARS</div>
+    <div class="turn-info">Tour <span id="turn-number">1</span> — <span id="current-player-name">—</span></div>
+    <button class="btn-sm" onclick="openOverlay('rules-modal')">📖 Règles</button>
+  </div>
+  <div class="game-area" id="game-area"></div>
+  <div class="action-panel" id="action-panel">
+    <div class="ap-lbl">ACTION</div>
+    <div class="ap-desc" id="ap-desc">—</div>
+    <div class="ap-btns" id="ap-btns"></div>
+  </div>
+  <button class="log-toggle" id="log-toggle-btn" onclick="document.getElementById('log-panel').classList.toggle('open')">📜 Journal</button>
+  <div class="log-panel" id="log-panel">
+    <div class="log-header">JOURNAL</div>
+    <div class="log-entries" id="log-entries"></div>
+  </div>
+</div>
+
+<!-- ═══ WINNER ═══ -->
+<div id="winner-screen" class="screen">
+  <div class="winner-box">
+    <div class="w-lbl">VICTOIRE</div>
+    <div class="w-name" id="winner-name">—</div>
+    <div class="w-sub">a détruit toutes les tours ennemies</div>
+    <button class="btn-restart" onclick="restart()">↩ NOUVELLE PARTIE</button>
+  </div>
+</div>
+
+<!-- ═══ PACT OVERLAY ═══ -->
+<div class="overlay" id="pact-overlay">
+  <div class="ovbox">
+    <div class="ov-title" style="color:#e8a020">🤝 PROPOSER UN PACTE</div>
+    <div class="ov-info">Tu n'as plus qu'une tour. Choisis un adversaire avec qui conclure une trêve de <strong>2 tours</strong>.</div>
+    <div class="tgt-list" id="pact-tgt-list"></div>
+    <button class="ov-cancel" onclick="closeOverlay('pact-overlay')">Annuler</button>
+  </div>
+</div>
+
+<!-- ═══ TARGET OVERLAY ═══ -->
+<div class="overlay" id="target-overlay">
+  <div class="ovbox">
+    <div class="ov-title">CHOISIR UNE CIBLE</div>
+    <div class="tgt-list" id="tgt-list"></div>
+    <button class="ov-cancel" onclick="closeOverlay('target-overlay')">Annuler</button>
+  </div>
+</div>
+
+<!-- ═══ RULES MODAL ═══ -->
+<div class="overlay" id="rules-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚔ RÈGLES DE TOWER WARS</div>
+    <h4>OBJECTIF</h4>
+    <p>Détruire les tours de tous vos adversaires. Dernier survivant = vainqueur.</p>
+    <h4>MISE EN PLACE</h4>
+    <p>Chaque joueur pioche 4 cartes, garde les 2 meilleures comme <strong>tours</strong> (les 2 autres à la défausse). Il pioche ensuite 1 carte <strong>défense</strong>. Valeurs : 2–10, Valet=11, Dame=12, Roi=13, As=14.</p>
+    <h4>SON TOUR — piocher 1 carte, puis choisir :</h4>
+    <h4>⚔ ATTAQUER</h4>
+    <p>Cibler n'importe quel adversaire. Force = carte piochée + carte chargée (si elle existe). Si <strong>Attaque ≤ Défense</strong> : bloqué. Si <strong>Attaque > Défense</strong> : Dégâts = Attaque − Défense. La défense est détruite. Le défenseur répartit les dégâts sur ses tours.</p>
+    <h4>🛡 DÉFENDRE</h4>
+    <p>Remplacer sa carte défense par la carte piochée.</p>
+    <h4>⚡ CHARGER</h4>
+    <p>Mettre la carte de côté (<strong>max 1 carte chargée</strong>). Elle sera ajoutée à la prochaine attaque. Si on charge à nouveau, l'ancienne charge est défaussée.</p>
+    <h4>DÉGÂTS ET TOURS</h4>
+    <p>Les dégâts s'appliquent <strong>automatiquement</strong> sur la tour la plus haute en premier, puis sur la suivante si nécessaire. Si le défenseur avait une carte chargée, elle est <strong>perdue</strong>. Les cartes tours sont remplacées physiquement par des cartes de la valeur restante (valeur inférieure la plus proche si indisponible). À 0 PV → éliminé.</p>
+    <h4>DECK</h4>
+    <p>Quand le deck est vide, la défausse est mélangée et devient le nouveau deck.</p>
+    <h4 id="rules-pact-title" style="display:none">🤝 PACTE DE NON-AGRESSION</h4>
+    <p id="rules-pact-text" style="display:none"></p>
+    <button class="modal-close" onclick="closeOverlay('rules-modal')">Fermer</button>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<div id="event-banner"></div>
+
+<script>
+// ════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════
+const SUITS=['hearts','diamonds','spades','clubs'];
+const SYM={hearts:'♥',diamonds:'♦',spades:'♠',clubs:'♣'};
+const VALS=[2,3,4,5,6,7,8,9,10,11,12,13,14];
+const VD={11:'J',12:'Q',13:'K',14:'A'};
+const PCOLORS=['p0','p1','p2','p3'];
+const POSITIONS={2:['top','bottom'],3:['top','left','bottom'],4:['top','left','right','bottom']};
+
+// ════════════════════════════════
+//  STATE
+// ════════════════════════════════
+let G={};
+let setupCount=2, setupIsAI=[false,true,true,true], setupNames=['Joueur 1','IA 1','IA 2','IA 3'];
+let setupPact=false, setupPactBreach='block'; // 'block' | 'penalty'
+
+function togglePactOptions(){
+  setupPact=document.getElementById('opt-pact').checked;
+  document.getElementById('pact-sub').style.display=setupPact?'flex':'none';
+  updateRulesPactText();
+}
+function setPactBreach(el){
+  setupPactBreach=el.value;
+  updateRulesPactText();
+}
+function updateRulesPactText(){
+  const t=document.getElementById('rules-pact-title');
+  const p=document.getElementById('rules-pact-text');
+  if(!t||!p)return;
+  t.style.display=setupPact?'':'none';
+  p.style.display=setupPact?'':'none';
+  const breach=setupPactBreach==='block'
+    ?'La rupture est <strong>techniquement impossible</strong> — l\'attaquant ne peut pas cibler un allié sous pacte.'
+    :'En cas de rupture, <strong>l\'attaquant perd immédiatement sa carte défense</strong>.';
+  p.innerHTML=`Un joueur réduit à <strong>1 seule tour</strong> peut, à son tour, proposer un pacte à un adversaire au lieu d'agir. Le pacte dure <strong>2 tours</strong> : pendant ce temps, l'adversaire ciblé ne peut pas l'attaquer. Le joueur protégé peut y mettre fin librement. ${breach}`;
+}
+
+// ════════════════════════════════
+//  SETUP UI
+// ════════════════════════════════
+function initSetupUI(){
+  const c=document.getElementById('player-names-setup');
+  c.innerHTML='';
+  for(let i=0;i<4;i++){
+    const row=document.createElement('div');
+    row.className='player-name-row';
+    row.id='sr-'+i;
+    row.style.display=i<setupCount?'flex':'none';
+    row.innerHTML=`<div class="player-color-dot p${i}"></div>
+      <input class="name-input" type="text" value="${setupNames[i]}" oninput="setupNames[${i}]=this.value" placeholder="Joueur ${i+1}">
+      <button class="ai-toggle ${setupIsAI[i]?'ai-active':''}" onclick="toggleAI(${i})" id="ait-${i}">${setupIsAI[i]?'🤖 IA':'👤 Humain'}</button>`;
+    c.appendChild(row);
+  }
+}
+function toggleAI(i){
+  if(i===0){showNotif('Le joueur 1 doit être humain.','err');return;}
+  setupIsAI[i]=!setupIsAI[i];
+  const b=document.getElementById('ait-'+i);
+  b.className='ai-toggle'+(setupIsAI[i]?' ai-active':'');
+  b.textContent=setupIsAI[i]?'🤖 IA':'👤 Humain';
+}
+document.querySelectorAll('.cnt-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(btn.disabled)return;
+    setupCount=parseInt(btn.dataset.count);
+    document.querySelectorAll('.cnt-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    initSetupUI();
+  });
+});
+
+// ════════════════════════════════
+//  DECK
+// ════════════════════════════════
+function createDeck(){const d=[];for(const s of SUITS)for(const v of VALS)d.push({suit:s,val:v});return d;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function drawCard(){
+  if(G.deck.length===0){
+    if(G.discard.length===0)return null;
+    G.deck=shuffle([...G.discard]);G.discard=[];
+  }
+  return G.deck.pop();
+}
+function findCardByValue(val){
+  for(let v=val;v>=1;v--){
+    let idx=G.deck.findIndex(c=>c.val===v);
+    if(idx>=0)return G.deck.splice(idx,1)[0];
+    idx=G.discard.findIndex(c=>c.val===v);
+    if(idx>=0)return G.discard.splice(idx,1)[0];
+  }
+  return null;
+}
+
+// ════════════════════════════════
+//  GAME START
+// ════════════════════════════════
+function startGame(){
+  const n=setupCount;
+  G={deck:shuffle(createDeck()),discard:[],players:[],turn:0,turnNumber:1,phase:'action',drawnCard:null,
+     pactEnabled:setupPact, pactBreach:setupPactBreach};
+  for(let i=0;i<n;i++){
+    const pool=[];
+    for(let j=0;j<4;j++){const c=G.deck.pop();if(c)pool.push(c);}
+    pool.sort((a,b)=>b.val-a.val);
+    const towers=pool.slice(0,2);
+    G.discard.push(...pool.slice(2));
+    const defense=G.deck.pop();
+    G.players.push({id:i,name:setupNames[i],isAI:i>0&&setupIsAI[i],towers,defense,charged:null,eliminated:false,
+      pact:null}); // pact:{withId, turnsLeft}
+  }
+  // Le joueur qui commence est celui qui a les tours les plus faibles
+  let minHP=Infinity, firstTurn=0;
+  G.players.forEach((p,i)=>{
+    const hp=p.towers.reduce((s,t)=>s+t.val,0);
+    if(hp<minHP){minHP=hp;firstTurn=i;}
+  });
+  G.turn=firstTurn;
+  addLog(`🎲 <strong>${G.players[firstTurn].name}</strong> commence (tours les plus faibles : ${minHP} PV)`,'eli');
+  showScreen('game-screen');
+  renderGame();
+  startTurn();
+}
+
+// ════════════════════════════════
+//  TURN
+// ════════════════════════════════
+function startTurn(){
+  const p=G.players[G.turn];
+  if(p.eliminated){nextTurn();return;}
+  document.getElementById('turn-number').textContent=G.turnNumber;
+  document.getElementById('current-player-name').textContent=p.name;
+  const card=drawCard();
+  G.drawnCard=card;
+  G.phase='action';
+  if(p.isAI){
+    addLog(`<span style="font-size:10px;color:var(--border)">T${G.turnNumber}</span> — <strong>${p.name}</strong> pioche (IA)`,'');
+    renderGame();renderActionPanel();
+    setTimeout(()=>aiTurn(G.turn),900);
+  } else {
+    addLog(`<span style="font-size:10px;color:var(--border)">T${G.turnNumber}</span> — <strong>${p.name}</strong> pioche <strong>${cs(card)}</strong>`,'');
+    renderGame();renderActionPanel();
+  }
+}
+function nextTurn(){
+  // Décrémenter les pactes actifs
+  if(G.pactEnabled){
+    for(const p of G.players){
+      if(p.pact){
+        p.pact.turnsLeft--;
+        if(p.pact.turnsLeft<=0){
+          const ally=G.players[p.pact.withId];
+          addLog(`🤝 Pacte entre <strong>${p.name}</strong> et <strong>${ally?ally.name:'?'}</strong> expiré.`,'');
+          // effacer des deux côtés
+          if(ally&&ally.pact&&ally.pact.withId===p.id) ally.pact=null;
+          p.pact=null;
+        }
+      }
+    }
+  }
+  G.turn=(G.turn+1)%G.players.length;
+  let tries=0;
+  while(G.players[G.turn].eliminated&&tries<G.players.length){G.turn=(G.turn+1)%G.players.length;tries++;}
+  G.turnNumber++;
+  const alive=G.players.filter(p=>!p.eliminated);
+  if(alive.length<=1){endGame(alive[0]);return;}
+  startTurn();
+}
+
+// ── PACTE ──
+function canProposePact(p){
+  if(!G.pactEnabled) return false;
+  if(p.towers.length!==1) return false; // seulement si 1 tour restante
+  if(p.pact) return false; // déjà sous pacte
+  return true;
+}
+
+function isPactProtected(attacker, target){
+  // target est-il protégé par un pacte contre attacker ?
+  if(!G.pactEnabled) return false;
+  if(target.pact && target.pact.withId===attacker.id) return true;
+  if(attacker.pact && attacker.pact.withId===target.id) return true;
+  return false;
+}
+
+function doPact(){
+  const p=G.players[G.turn];
+  if(!canProposePact(p)){showNotif('Pacte impossible dans cette situation.','err');return;}
+  const targets=G.players.filter(t=>!t.eliminated&&t.id!==p.id&&!t.pact);
+  if(!targets.length){showNotif('Aucun adversaire disponible pour un pacte.','err');return;}
+  openPactOverlay(targets, tid=>{
+    const target=G.players[tid];
+    p.pact={withId:tid, turnsLeft:2, role:'proposer'};
+    target.pact={withId:p.id, turnsLeft:2, role:'protected'};
+    addLog(`🤝 <strong>${p.name}</strong> propose un pacte à <strong>${target.name}</strong> — 2 tours de trêve !`,'');
+    showBanner(`🤝 Pacte conclu !<span class="banner-sub">${p.name} ↔ ${target.name} — 2 tours</span>`,'',1800);
+    // défausser la carte piochée (le pacte remplace l'action)
+    if(G.drawnCard){G.discard.push(G.drawnCard);G.drawnCard=null;}
+    renderGame();nextTurn();
+  });
+}
+
+function doBreakPact(pId){
+  // Le joueur protégé (pId) brise son pacte
+  const p=G.players[pId];
+  if(!p||!p.pact) return;
+  const other=G.players[p.pact.withId];
+  addLog(`🤝 <strong>${p.name}</strong> met fin au pacte avec <strong>${other?other.name:'?'}</strong>.`,'');
+  if(other&&other.pact&&other.pact.withId===pId) other.pact=null;
+  p.pact=null;
+  renderGame();renderActionPanel();
+}
+
+// ════════════════════════════════
+//  ACTIONS
+// ════════════════════════════════
+async function doAttack(){
+  const p=G.players[G.turn];
+  const targets=G.players.filter(t=>{
+    if(t.eliminated||t.id===p.id) return false;
+    if(isPactProtected(p,t)&&G.pactBreach==='block') return false;
+    return true;
+  });
+  openTargetOverlay(targets,async tid=>{
+    const target=G.players[tid];
+    // Rupture de pacte ?
+    if(isPactProtected(p,target)&&G.pactBreach==='penalty'){
+      if(p.defense){G.discard.push(p.defense);p.defense=null;}
+      if(target.pact&&target.pact.withId===p.id) target.pact=null;
+      if(p.pact&&p.pact.withId===target.id) p.pact=null;
+      addLog(`💔 <strong>${p.name}</strong> brise le pacte avec <strong>${target.name}</strong> — perd sa défense !`,'chg');
+      await showBanner(`💔 Pacte brisé !<span class="banner-sub">${p.name} attaque son allié et perd sa défense !</span>`,'atk',2000);
+      renderGame();
+      await delay(400);
+    }
+    const totalAtk=G.drawnCard.val+(p.charged?p.charged.val:0);
+    const defVal=target.defense?target.defense.val:0;
+    if(totalAtk<=defVal){
+      addLog(`<strong>${p.name}</strong> attaque <strong>${target.name}</strong> avec <strong>${totalAtk}</strong> — 🛡 Bloqué (défense ${defVal})`,'atk');
+      await showBanner(`🛡 Attaque bloquée !<span class="banner-sub">${totalAtk} ≤ défense ${defVal} de ${target.name}</span>`,'blk',1800);
+      discardAction();nextTurn();
+    } else {
+      const dmg=totalAtk-defVal;
+      if(target.defense){G.discard.push(target.defense);target.defense=null;}
+      if(target.charged){G.discard.push(target.charged);target.charged=null;addLog(`<strong>${target.name}</strong> perd sa carte chargée !`,'chg');}
+      const bannerSub=defVal>0?`${totalAtk} vs défense ${defVal} — ${dmg} dégât${dmg>1?'s':''}`:`Sans défense — ${dmg} dégât${dmg>1?'s':''} direct${dmg>1?'s':''}!`;
+      addLog(`<strong>${p.name}</strong> attaque <strong>${target.name}</strong> avec <strong>${totalAtk}</strong> — 💥 <strong>${dmg}</strong> dégâts! (défense ${defVal} détruite)`,'atk');
+      await showBanner(`⚔ ${p.name} attaque ${target.name}<span class="banner-sub">${bannerSub}</span>`,'atk',1800);
+      discardAction();
+      openDamageOverlay(target,dmg,()=>{renderGame();checkElimination();nextTurn();});
+    }
+  });
+}
+function doDefend(){
+  const p=G.players[G.turn];
+  const oldDef=p.defense?p.defense.val:0;
+  if(p.defense)G.discard.push(p.defense);
+  p.defense=G.drawnCard;G.drawnCard=null;
+  if(p.charged){G.discard.push(p.charged);p.charged=null;}
+  addLog(`<strong>${p.name}</strong> défend : ${oldDef} → <strong>${p.defense.val}</strong> (${cs(p.defense)})`,'def');
+  showBanner(`🛡 ${p.name} se défend<span class="banner-sub">Défense ${oldDef} → ${p.defense.val}</span>`,'def',1400);
+  renderGame();nextTurn();
+}
+function doCharge(){
+  const p=G.players[G.turn];
+  if(p.charged){G.discard.push(p.charged);}
+  p.charged=G.drawnCard;G.drawnCard=null;
+  addLog(`<strong>${p.name}</strong> charge <strong>${cs(p.charged)}</strong> (${p.charged.val}) pour sa prochaine attaque`,'chg');
+  showBanner(`⚡ ${p.name} charge<span class="banner-sub">Valeur ${p.charged.val} mise en réserve</span>`,'chg',1400);
+  renderGame();nextTurn();
+}
+function doDiscard(){
+  const p=G.players[G.turn];
+  const card=G.drawnCard;
+  G.discard.push(card);G.drawnCard=null;
+  addLog(`<strong>${p.name}</strong> défausse <strong>${cs(card)}</strong>`,'');
+  showBanner(`🗑 ${p.name} défausse<span class="banner-sub">${cs(card)} — aucune action</span>`,'',1200);
+  renderGame();nextTurn();
+}
+function discardAction(){
+  const p=G.players[G.turn];
+  if(G.drawnCard){G.discard.push(G.drawnCard);G.drawnCard=null;}
+  if(p.charged){G.discard.push(p.charged);p.charged=null;}
+}
+
+// ════════════════════════════════
+//  DAMAGE
+// ════════════════════════════════
+let DS={};
+function openDamageOverlay(target,dmg,cb){
+  if(target.towers.length===0){cb();return;}
+  const totalHP=target.towers.reduce((s,t)=>s+t.val,0);
+  if(dmg>=totalHP){
+    for(const t of target.towers)G.discard.push(t);
+    target.towers=[];cb();return;
+  }
+  // Auto-distribute: absorb on highest tower first
+  autoDistribute(target,dmg);
+  cb();
+}
+function autoDistribute(target,dmg){
+  let rem=dmg;
+  // Work on a snapshot sorted by value desc, apply damage by card reference not index
+  const sorted=[...target.towers].sort((a,b)=>b.val-a.val);
+  for(const card of sorted){
+    if(rem<=0)break;
+    const idx=target.towers.indexOf(card);
+    if(idx<0)continue;
+    const d=Math.min(rem,card.val);
+    applyDmg(target,idx,d);
+    rem-=d;
+  }
+}
+function applyDmg(target,idx,dmg){
+  const t=target.towers[idx];if(!t)return;
+  const nv=Math.max(0,t.val-dmg);
+  G.discard.push(t);
+  if(nv>0){
+    const r=findCardByValue(nv);
+    target.towers[idx]=r||{suit:'spades',val:nv,virtual:true};
+  } else {
+    target.towers.splice(idx,1);
+  }
+}
+function aiDistribute(target,dmg){autoDistribute(target,dmg);}
+function checkElimination(){
+  for(const p of G.players){
+    if(!p.eliminated&&p.towers.length===0){
+      p.eliminated=true;
+      if(p.defense){G.discard.push(p.defense);p.defense=null;}
+      if(p.charged){G.discard.push(p.charged);p.charged=null;}
+      addLog(`💀 <strong>${p.name}</strong> est éliminé(e) !`,'eli');
+      showBanner(`💀 ${p.name} est éliminé(e) !<span class="banner-sub">Toutes les tours sont détruites</span>`,'eli',1500);
+    }
+  }
+}
+
+// ════════════════════════════════
+//  ANIMATION HELPERS
+// ════════════════════════════════
+const AI_DELAY = 2500; // ms between AI steps
+
+function showBanner(html, type='', duration=1400){
+  return new Promise(resolve=>{
+    const el=document.getElementById('event-banner');
+    el.innerHTML=html;
+    el.className='show '+(type||'');
+    clearTimeout(el._t1);clearTimeout(el._t2);
+    el._t1=setTimeout(()=>{
+      el.classList.remove('show');
+      el.classList.add('hide');
+      el._t2=setTimeout(()=>{el.className='';resolve();},220);
+    },duration);
+  });
+}
+
+function pulseZone(playerId, cssClass, duration=1200){
+  return new Promise(resolve=>{
+    // Find the zone by player index
+    const zones=document.querySelectorAll('.player-zone');
+    const pos=POSITIONS[G.players.length];
+    const zone=document.querySelector(`.player-zone[data-pos="${pos[playerId]}"]`);
+    if(!zone){resolve();return;}
+    zone.classList.add(cssClass);
+    setTimeout(()=>{zone.classList.remove(cssClass);resolve();},duration);
+  });
+}
+
+function flashLog(){
+  const btn=document.getElementById('log-toggle-btn');
+  if(btn){btn.classList.add('new-event');setTimeout(()=>btn.classList.remove('new-event'),2500);}
+}
+
+function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// Show AI drawn card in action panel
+function showAIStep(text, card){
+  const desc=document.getElementById('ap-desc');
+  const btns=document.getElementById('ap-btns');
+  btns.innerHTML='';
+  let cardHTML='';
+  if(card){
+    const vd=VD[card.val]||card.val, sym=SYM[card.suit]||'?';
+    cardHTML=`<span class="ai-card-preview ${card.suit}">${vd}${sym}</span>`;
+  }
+  desc.innerHTML=`<span class="ai-step">${cardHTML}<span>${text}</span></span>`;
+}
+
+
+
+// Évalue la dangerosité d'un adversaire pour moi
+function aiThreat(me, enemy){
+  const enemyAtk = 14 + (enemy.charged ? enemy.charged.val : 0); // pire cas
+  const myDef    = me.defense ? me.defense.val : 0;
+  const myHP     = me.towers.reduce((s,t)=>s+t.val,0);
+  const potDmg   = Math.max(0, enemyAtk - myDef);
+  // Danger si l'ennemi peut m'infliger plus de 50% de mes PV restants
+  return potDmg / Math.max(1, myHP);
+}
+
+// Score d'une action ATTAQUE sur une cible donnée
+function scoreAttack(p, target, totalAtk){
+  const dv   = target.defense ? target.defense.val : 0;
+  const dmg  = totalAtk - dv;
+  if(dmg <= 0) return -Infinity;
+
+  const hp         = target.towers.reduce((s,t)=>s+t.val,0);
+  const alive      = G.players.filter(q=>!q.eliminated);
+  const isLastAlive= alive.length === 2; // si on tue cette cible, on gagne
+
+  let score = 0;
+
+  // Bonus : élimination immédiate = victoire ou réduction du champ
+  if(dmg >= hp)       score += isLastAlive ? 10000 : 200;
+
+  // Bonus : cible sans défense = vulnérable, facile à finir
+  if(dv === 0)        score += 60;
+
+  // Bonus : cible avec charge = lui faire perdre sa charge accumulée
+  if(target.charged)  score += 30;
+
+  // Bonus : cibler le joueur le plus faible (finir les blessés)
+  score += (28 - hp) * 2;
+
+  // Bonus : dégâts bruts pondérés par le % de PV retirés
+  score += dmg + (dmg / Math.max(1, hp)) * 20;
+
+  // Malus : gaspiller une grosse attaque sur une cible déjà solide
+  if(dv > 0 && dmg < 3) score -= 20;
+
+  return score;
+}
+
+// Score d'une action CHARGE
+function scoreCharge(p, card, targets){
+  if(p.charged) return -Infinity; // déjà une charge, pas de double charge
+
+  const futureAtk = card.val + card.val; // heuristique : prochaine carte ~= même valeur
+  const myDef = p.defense ? p.defense.val : 0;
+  const myHP  = p.towers.reduce((s,t)=>s+t.val,0);
+
+  // Inutile si la carte est trop petite
+  if(card.val < 5) return -Infinity;
+
+  // Utile si avec la charge on pourrait percer une défense actuellement infranchissable
+  const unlocks = targets.some(t=>{
+    const dv = t.defense ? t.defense.val : 0;
+    return card.val <= dv && futureAtk > dv;
+  });
+
+  // Utile si aucune cible n'est atteignable maintenant mais le sera avec charge
+  const noTargetNow = targets.every(t=>{
+    const dv = t.defense ? t.defense.val : 0;
+    return card.val <= dv;
+  });
+
+  let score = 0;
+  if(noTargetNow && unlocks) score += 40 + card.val * 2;
+
+  // Moins utile si je suis en danger (mieux vaut défendre)
+  const danger = aiThreat(p, targets.reduce((a,b)=>
+    (b.towers.reduce((s,t)=>s+t.val,0) > a.towers.reduce((s,t)=>s+t.val,0) ? b : a), targets[0]));
+  if(danger > 0.6) score -= 30;
+
+  return score;
+}
+
+// Score d'une action DÉFENSE
+function scoreDefend(p, card, targets){
+  const myDef = p.defense ? p.defense.val : 0;
+  const myHP  = p.towers.reduce((s,t)=>s+t.val,0);
+
+  // Inutile si la carte n'améliore pas la défense
+  if(card.val <= myDef) return -Infinity;
+
+  const gain = card.val - myDef;
+
+  let score = gain * 3; // chaque point de défense gagné vaut quelque chose
+
+  // Bonus si je suis en danger
+  const maxThreat = Math.max(...targets.map(t=>aiThreat(p,t)));
+  if(maxThreat > 0.5) score += maxThreat * 50;
+
+  // Bonus si je n'ai pas de défense du tout
+  if(!p.defense) score += 40;
+
+  // Bonus si mes PV sont faibles (survivre avant tout)
+  if(myHP < 10) score += 30;
+
+  // Malus si je suis en bonne santé et que j'attaque bien sans défendre
+  if(myHP > 15 && myDef >= 8) score -= 20;
+
+  return score;
+}
+
+async // Score d'une action PACTE
+function scorePact(p, targets){
+  if(!G.pactEnabled || !canProposePact(p)) return -Infinity;
+
+  const myHP  = p.towers.reduce((s,t)=>s+t.val,0);
+  const myDef = p.defense ? p.defense.val : 0;
+
+  // Évaluer la menace réelle (pas pire cas) : moyenne des attaques adverses atteignables
+  const threats = targets.map(t=>{
+    const tAtk = (t.charged ? t.charged.val : 7) + 4; // heuristique attaque probable
+    return Math.max(0, tAtk - myDef);
+  });
+  const maxThreat = Math.max(...threats);
+  const avgThreat = threats.reduce((s,v)=>s+v,0) / Math.max(1,threats.length);
+
+  let score = 0;
+
+  // Valeur de base : proportionnelle au danger relatif à mes PV
+  score += (maxThreat / Math.max(1, myHP)) * 60;
+
+  // Bonus si je suis vraiment en danger de mort ce tour
+  if(maxThreat >= myHP) score += 80;
+
+  // Bonus si plusieurs adversaires me menacent (acharnement)
+  const dangerousCount = threats.filter(t=>t>0).length;
+  if(dangerousCount >= 2) score += 30;
+
+  // Malus si j'ai encore de bons moyens d'agir (pas encore désespéré)
+  const canAttackSomeone = targets.some(t=>{
+    const dv=t.defense?t.defense.val:0;
+    return (p.charged?p.charged.val:0) + 7 > dv; // heuristique carte probable
+  });
+  if(canAttackSomeone && myHP > 5) score -= 40;
+
+  // Malus si je suis déjà sous pacte (ne devrait pas arriver mais sécurité)
+  if(p.pact) return -Infinity;
+
+  return score;
+}
+
+// Choisir le meilleur allié pour un pacte IA
+function bestPactAlly(p, targets){
+  // Préférer : joueur le moins menaçant ET pas déjà sous pacte
+  return targets
+    .filter(t=>!t.pact&&!t.eliminated)
+    .sort((a,b)=>{
+      const aScore=(a.charged?a.charged.val:0)+(a.towers.reduce((s,t)=>s+t.val,0)/10);
+      const bScore=(b.charged?b.charged.val:0)+(b.towers.reduce((s,t)=>s+t.val,0)/10);
+      return aScore-bScore; // le moins menaçant en premier
+    })[0]||null;
+}
+
+async function aiTurn(pi){
+  const p=G.players[pi];
+  const card=G.drawnCard;
+  if(!card){nextTurn();return;}
+  const targets=G.players.filter(t=>!t.eliminated&&t.id!==p.id);
+  if(!targets.length){discardAction();nextTurn();return;}
+
+  const chargedV=p.charged?p.charged.val:0;
+  const totalAtk=card.val+chargedV;
+
+  // ── PHASE 1 : montrer la carte piochée ──
+  showAIStep(`<strong>${p.name}</strong> pioche…`, null);
+  await delay(800);
+  showAIStep(`<strong>${p.name}</strong> pioche <strong>${cs(card)}</strong>${chargedV>0?` + charge (${chargedV}) = <strong>${totalAtk}</strong>`:''}`, card);
+  renderGame();
+  await delay(AI_DELAY);
+
+  // ── Calcul des scores — exclure les cibles sous pacte (si rupture bloquée) ──
+  let bestTarget=null,bestAtkScore=-Infinity;
+  for(const t of targets){
+    if(G.pactEnabled && G.pactBreach==='block' && isPactProtected(p,t)) continue;
+    const s=scoreAttack(p,t,totalAtk);if(s>bestAtkScore){bestAtkScore=s;bestTarget=t;}
+  }
+  const chargeScore=scoreCharge(p,card,targets);
+  const defendScore=scoreDefend(p,card,targets);
+  const pactScore=scorePact(p,targets);
+  const best=Math.max(bestAtkScore,chargeScore,defendScore,pactScore);
+
+  // ── PHASE 2 : annoncer + exécuter ──
+  if(best===pactScore&&pactScore>-Infinity){
+    const ally=bestPactAlly(p,targets);
+    if(ally){
+      showAIStep(`<strong>${p.name}</strong> cherche un allié…`, null);
+      await delay(AI_DELAY);
+      await showBanner(`🤝 Pacte proposé !<span class="banner-sub">${p.name} ↔ ${ally.name} — 2 tours de trêve</span>`,'',2000);
+      p.pact={withId:ally.id,turnsLeft:2,role:'proposer'};
+      ally.pact={withId:p.id,turnsLeft:2,role:'protected'};
+      addLog(`🤝 <strong>${p.name}</strong> propose un pacte à <strong>${ally.name}</strong> — 2 tours de trêve !`,'');
+      if(G.drawnCard){G.discard.push(G.drawnCard);G.drawnCard=null;}
+      renderGame();flashLog();
+      await delay(600);
+      nextTurn();
+      return;
+    }
+  }
+
+  // ── PHASE 2 : annoncer + exécuter ──
+  if(best===bestAtkScore&&bestAtkScore>-Infinity&&bestTarget){
+    const dv=bestTarget.defense?bestTarget.defense.val:0;
+    const dmg=totalAtk-dv;
+
+    showAIStep(`<strong>${p.name}</strong> vise <strong>${bestTarget.name}</strong>…`, card);
+    pulseZone(bestTarget.id,'zone-targeted',1800);
+    await delay(1000);
+
+    const bannerSub=dv>0?`${totalAtk} vs défense ${dv} — ${dmg} dégât${dmg>1?'s':''}`:`Sans défense — ${dmg} dégât${dmg>1?'s':''} direct${dmg>1?'s':''}!`;
+    await showBanner(`⚔ ${p.name} attaque ${bestTarget.name}<span class="banner-sub">${bannerSub}</span>`,'atk',1800);
+
+    addLog(`<strong>${p.name}</strong> attaque <strong>${bestTarget.name}</strong> avec <strong>${totalAtk}</strong> — 💥 <strong>${dmg}</strong> dégâts!`,'atk');
+    if(bestTarget.defense){G.discard.push(bestTarget.defense);bestTarget.defense=null;}
+    if(bestTarget.charged){G.discard.push(bestTarget.charged);bestTarget.charged=null;addLog(`<strong>${bestTarget.name}</strong> perd sa carte chargée !`,'chg');}
+    discardAction();
+    aiDistribute(bestTarget,dmg);
+    renderGame();checkElimination();flashLog();
+
+    if(G.players.filter(q=>!q.eliminated).length<=1){endGame(G.players.filter(q=>!q.eliminated)[0]);return;}
+    await delay(700);
+    nextTurn();
+
+  }else if(best===chargeScore&&chargeScore>-Infinity){
+    showAIStep(`<strong>${p.name}</strong> charge <strong>${cs(card)}</strong> pour plus tard…`, card);
+    pulseZone(pi,'zone-charging',1500);
+    await delay(900);
+    await showBanner(`⚡ ${p.name} charge<span class="banner-sub">Valeur ${card.val} mise en réserve</span>`,'chg',1600);
+
+    p.charged=G.drawnCard;G.drawnCard=null;
+    addLog(`<strong>${p.name}</strong> charge <strong>${cs(p.charged)}</strong> (${p.charged.val})`,'chg');
+    renderGame();flashLog();
+    await delay(600);
+    nextTurn();
+
+  }else if(best===defendScore&&defendScore>-Infinity){
+    const oldDef=p.defense?p.defense.val:0;
+    showAIStep(`<strong>${p.name}</strong> renforce sa défense avec <strong>${cs(card)}</strong>…`, card);
+    pulseZone(pi,'zone-defended',1500);
+    await delay(900);
+    await showBanner(`🛡 ${p.name} se défend<span class="banner-sub">Défense ${oldDef} → ${card.val}</span>`,'def',1600);
+
+    if(p.defense)G.discard.push(p.defense);
+    p.defense=G.drawnCard;G.drawnCard=null;
+    if(p.charged){G.discard.push(p.charged);p.charged=null;}
+    addLog(`<strong>${p.name}</strong> améliore sa défense : ${oldDef} → <strong>${p.defense.val}</strong>`,'def');
+    renderGame();flashLog();
+    await delay(600);
+    nextTurn();
+
+  }else{
+    showAIStep(`<strong>${p.name}</strong> défausse <strong>${cs(card)}</strong>…`, card);
+    await delay(AI_DELAY);
+    G.discard.push(card);G.drawnCard=null;
+    addLog(`<strong>${p.name}</strong> défausse <strong>${cs(card)}</strong>`,'');
+    renderGame();
+    await delay(300);
+    nextTurn();
+  }
+}
+
+function openPactOverlay(targets, cb){
+  const list=document.getElementById('pact-tgt-list');list.innerHTML='';
+  for(const t of targets){
+    const hp=t.towers.reduce((s,c)=>s+c.val,0);
+    const btn=document.createElement('button');
+    btn.className='tgt-btn';
+    btn.style.borderColor='#e8a020';
+    btn.innerHTML=`<span>${t.name}</span><span class="tgt-preview">${hp} PV${t.pact?'  🤝 déjà sous pacte':''}</span>`;
+    btn.onclick=()=>{closeOverlay('pact-overlay');cb(t.id);};
+    list.appendChild(btn);
+  }
+  openOverlay('pact-overlay');
+}
+
+// ════════════════════════════════
+//  TARGET OVERLAY
+// ════════════════════════════════
+function openTargetOverlay(targets,cb){
+  const list=document.getElementById('tgt-list');list.innerHTML='';
+  for(const t of targets){
+    const hp=t.towers.reduce((s,c)=>s+c.val,0);
+    const dStr=t.defense?`Défense: ${t.defense.val}`:'🔓 Sans défense';
+    const btn=document.createElement('button');
+    btn.className='tgt-btn';
+    btn.innerHTML=`<span>${t.name}</span><span class="tgt-preview">${hp} PV · ${dStr}</span>`;
+    btn.onclick=async()=>{closeOverlay('target-overlay');await cb(t.id);};
+    list.appendChild(btn);
+  }
+  document.getElementById('target-overlay').classList.add('open');
+}
+
+// ════════════════════════════════
+//  RENDER
+// ════════════════════════════════
+function cs(c){if(!c)return'—';return`${VD[c.val]||c.val}${SYM[c.suit]}`;}
+
+function cardHTML(card,extra=''){
+  if(!card)return`<div class="card empty ${extra}"></div>`;
+  const vd=VD[card.val]||card.val,sym=SYM[card.suit]||'?';
+  return`<div class="card face-up ${card.suit} ${extra}">
+    <div class="card-corner tl"><span>${vd}</span><span style="font-size:9px">${sym}</span></div>
+    <div class="card-suit-c">${sym}</div>
+    <div class="card-corner br"><span>${vd}</span><span style="font-size:9px">${sym}</span></div>
+  </div>`;
+}
+
+function renderGame(){
+  const n=G.players.length;
+  const area=document.getElementById('game-area');
+  const pos=POSITIONS[n];
+  area.className=`game-area p${n}`;
+  area.innerHTML='';
+
+  G.players.forEach((p,i)=>{
+    const position=pos[i];
+    const isCur=i===G.turn&&!p.eliminated;
+    const totalHP=p.towers.reduce((s,t)=>s+t.val,0);
+    const chargedV=p.charged?p.charged.val:0;
+
+    const pactInfo=G.pactEnabled&&p.pact
+      ? `<span class="pact-badge">🤝 Pacte ${p.pact.turnsLeft}T</span>`
+      : '';
+    // Bouton "Rompre le pacte" si joueur humain protégé
+    const breakPactBtn=(G.pactEnabled&&p.pact&&p.pact.role==='protected'&&!p.isAI&&i===G.turn)
+      ? `<button onclick="doBreakPact(${i})" style="font-size:11px;padding:2px 8px;background:none;border:1px solid #e8a020;color:#e8a020;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:1px;">Rompre</button>`
+      : '';
+
+    const zone=document.createElement('div');
+    zone.className=`player-zone ${PCOLORS[i]} ${isCur?'current-turn':''} ${p.eliminated?'eliminated':''} ${G.pactEnabled&&p.pact?'zone-pacted':''}`;
+    zone.dataset.pos=position;
+
+    const header=`<div class="pz-header">
+      <div class="pz-name">${p.name}</div>
+      ${p.isAI?'<span class="pz-tag">🤖</span>':''}
+      ${p.eliminated?'<span class="pz-tag" style="color:var(--red2)">💀 ÉLIMINÉ</span>':''}
+      ${pactInfo}${breakPactBtn}
+      ${isCur?'<span class="pz-active">◆ ACTIF</span>':''}
+    </div>`;
+
+    if(p.eliminated){zone.innerHTML=header;area.appendChild(zone);return;}
+
+    // ── Defense + Towers (defense centered above the two towers)
+    const defVal=p.defense?p.defense.val:0;
+    const t0=p.towers[0]||null, t1=p.towers[1]||null;
+    const t0v=t0?t0.val:0, t1v=t1?t1.val:0;
+    // towerWidth = 2 cards + gap = 2*68 + 6 = 142px
+    const defBlock=`<div class="pz-defense-block" style="display:flex;flex-direction:column;align-items:center;width:142px;">
+      <div class="zone-lbl lbl-def" style="align-self:flex-start">DÉFENSE${defVal?` — ${defVal}`:'  —  aucune'}</div>
+      ${cardHTML(p.defense,'def-card')}
+    </div>`;
+
+    const towersBlock=`<div class="pz-towers-block">
+      <div class="towers-cards">
+        ${cardHTML(t0,`tower${t0&&t0.val/14<0.4?' damaged':''}`)}
+        ${cardHTML(t1,`tower${t1&&t1.val/14<0.4?' damaged':''}`)}
+      </div>
+      <div class="zone-val gold">Tours : ${t0v} + ${t1v} = ${totalHP} PV</div>
+    </div>`;
+
+    // ── Attack / Charge block (right side)
+    let rightBlock='';
+    if(isCur){
+      if(p.isAI){
+        // Pendant le tour IA : montrer la charge si elle existe, sinon placeholder
+        if(p.charged){
+          rightBlock=`<div class="attack-block">
+            <div class="zone-lbl lbl-chg">CHARGÉ : ${chargedV}</div>
+            ${cardHTML(p.charged,'charge-card')}
+          </div>`;
+        } else {
+          rightBlock=`<div class="ai-thinking">IA réfléchit...</div>`;
+        }
+      } else if(G.drawnCard){
+        const totalAtk=G.drawnCard.val+chargedV;
+        let stackHTML='';
+        if(p.charged){
+          stackHTML=`<div style="position:relative;width:calc(var(--cw) + 8px);height:var(--ch)">
+            <div style="position:absolute;top:-6px;left:0;z-index:1">${cardHTML(p.charged,'charge-card')}</div>
+            <div style="position:absolute;top:0;left:8px;z-index:2">${cardHTML(G.drawnCard,'drawn-card')}</div>
+          </div>`;
+        } else {
+          stackHTML=cardHTML(G.drawnCard,'drawn-card card-deal');
+        }
+        const piocheLabel=chargedV>0
+          ?`PIOCHE (${G.drawnCard.val}) + CHARGÉ (${chargedV}) = <strong style="color:var(--red2)">${totalAtk} si attaque</strong>`
+          :`PIOCHE : ${G.drawnCard.val}`;
+        rightBlock=`<div class="attack-block">
+          <div class="zone-lbl lbl-atk">${piocheLabel}</div>
+          ${stackHTML}
+        </div>`;
+      } else if(p.charged){
+        // Tour humain mais pas encore pioché (ne devrait pas arriver, mais sécurité)
+        rightBlock=`<div class="attack-block">
+          <div class="zone-lbl lbl-chg">CHARGÉ : ${chargedV}</div>
+          ${cardHTML(p.charged,'charge-card')}
+        </div>`;
+      }
+    } else {
+      // Joueurs non-actifs : toujours montrer la charge si elle existe
+      if(p.charged){
+        rightBlock=`<div class="attack-block">
+          <div class="zone-lbl lbl-chg">CHARGÉ : ${chargedV}</div>
+          ${cardHTML(p.charged,'charge-card')}
+        </div>`;
+      }
+    }
+
+    zone.innerHTML=`${header}
+      <div class="pz-body">
+        <div class="pz-left">
+          ${defBlock}
+          ${towersBlock}
+        </div>
+        <div class="pz-right" style="display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--border);padding-left:16px;margin-left:4px;">
+          ${rightBlock||'<span style="color:var(--border);font-size:12px">—</span>'}
+        </div>
+      </div>`;
+
+    area.appendChild(zone);
+  });
+}
+
+function renderActionPanel(){
+  const p=G.players[G.turn];
+  const desc=document.getElementById('ap-desc');
+  const btns=document.getElementById('ap-btns');
+  if(p.isAI||p.eliminated){
+    desc.innerHTML=p.isAI?`<span class="ai-thinking">IA réfléchit...</span>`:'—';
+    btns.innerHTML='';return;
+  }
+  if(!G.drawnCard){desc.innerHTML='—';btns.innerHTML='';return;}
+  const cv=p.charged?p.charged.val:0;
+  const total=G.drawnCard.val+cv;
+  const ci=cv>0?` + ${cv} chargé = <strong style="color:var(--red2)">${total} si attaque</strong>`:'';
+  desc.innerHTML=`Carte piochée : <strong>${cs(G.drawnCard)}</strong> (${G.drawnCard.val}${ci}) — Que faire ?`;
+  const tgts=G.players.filter(t=>!t.eliminated&&t.id!==p.id);
+  const pactBtn=canProposePact(p)?`<button class="btn-act" style="border-color:#e8a020;color:#e8a020;" onclick="doPact()">🤝 Pacte</button>`:'';
+  btns.innerHTML=`
+    <button class="btn-act atk" onclick="doAttack()" ${!tgts.length?'disabled':''}>⚔ Attaquer</button>
+    <button class="btn-act def" onclick="doDefend()">🛡 Défendre</button>
+    <button class="btn-act chg" onclick="doCharge()">⚡ Charger${p.charged?' (remplace)':''}</button>
+    <button class="btn-act" style="border-color:#555;color:#888;" onclick="doDiscard()">🗑 Défausser</button>
+    ${pactBtn}`;
+}
+
+// ════════════════════════════════
+//  LOG
+// ════════════════════════════════
+function addLog(msg,type){
+  const el=document.getElementById('log-entries');
+  const d=document.createElement('div');
+  d.className='log-entry '+type;d.innerHTML=msg;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+
+// ════════════════════════════════
+//  HELPERS
+// ════════════════════════════════
+function endGame(w){document.getElementById('winner-name').textContent=w?w.name:'???';showScreen('winner-screen');}
+function restart(){showScreen('setup-screen');initSetupUI();}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function openOverlay(id){document.getElementById(id).classList.add('open');}
+function closeOverlay(id){document.getElementById(id).classList.remove('open');}
+let nT;
+function showNotif(msg,type=''){
+  const el=document.getElementById('notif');
+  el.textContent=msg;el.className='notif '+type+' show';
+  clearTimeout(nT);nT=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+initSetupUI();
+</script>
+</body>
+</html>
