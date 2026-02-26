@@ -118,7 +118,7 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .opts-disabled { opacity:0.4; pointer-events:none; }
 
 /* ══════════ GAME ══════════ */
-#game-screen { background:#0a0a10; flex-direction:column; min-height:100vh; }
+#game-screen { background:#0a0a10; flex-direction:column; height:100vh; overflow:hidden; }
 .topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
 .topbar-title { font-family:'Cinzel',serif; font-size:18px; color:var(--gold); letter-spacing:3px; }
 .turn-info { font-family:'Cinzel',serif; font-size:13px; color:var(--text2); }
@@ -130,50 +130,42 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .my-turn-badge.visible { display:inline-block; animation:badgePulse 1s ease infinite; }
 @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
 
-/* GAME AREA */
-.game-area { flex:1; display:grid; gap:10px; padding:12px 12px 96px; overflow:auto; }
-.game-area.p2 { grid-template-areas:"top" "bottom"; grid-template-rows:1fr 1fr; }
-.game-area.p3 { grid-template-areas:"top top" "left bottom"; grid-template-rows:1fr 1fr; grid-template-columns:1fr 1fr; }
-.game-area.p4 { grid-template-areas:". top ." "left . right" ". bottom ."; grid-template-rows:1fr 1fr 1fr; grid-template-columns:1fr 1fr 1fr; }
+/* ENEMIES AREA */
+.enemies-area { flex:1; display:flex; flex-direction:row; gap:8px; padding:10px 12px; overflow-x:auto; overflow-y:hidden; min-height:0; align-items:stretch; }
 
-/* PLAYER ZONE */
-.player-zone { border:1px solid var(--border); background:var(--bg2); border-radius:4px; padding:12px 14px; position:relative; transition:border-color 0.3s,box-shadow 0.3s; display:flex; flex-direction:column; gap:8px; }
-.player-zone[data-pos="top"]    { grid-area:top; }
-.player-zone[data-pos="bottom"] { grid-area:bottom; }
-.player-zone[data-pos="left"]   { grid-area:left; }
-.player-zone[data-pos="right"]  { grid-area:right; }
-.player-zone.current-turn { border-color:var(--gold); box-shadow:0 0 20px rgba(201,168,76,0.12); }
-.player-zone.eliminated   { opacity:0.35; filter:grayscale(1); }
-.player-zone.is-me        { border-style:solid; }
-.player-zone.p0.current-turn { border-color:#c9a84c; box-shadow:0 0 20px rgba(201,168,76,0.15); }
-.player-zone.p1.current-turn { border-color:#2980b9; box-shadow:0 0 20px rgba(41,128,185,0.15); }
-.player-zone.p2.current-turn { border-color:#27ae60; box-shadow:0 0 20px rgba(39,174,96,0.15); }
-.player-zone.p3.current-turn { border-color:#8e44ad; box-shadow:0 0 20px rgba(142,68,173,0.15); }
+/* ENEMY ZONE */
+.enemy-zone { flex:1; min-width:175px; max-width:300px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; position:relative; transition:border-color 0.3s,box-shadow 0.3s; }
+.enemy-zone.current-turn { border-color:var(--gold); box-shadow:0 0 20px rgba(201,168,76,0.12); }
+.enemy-zone.eliminated   { opacity:0.35; filter:grayscale(1); }
+.enemy-zone.p0.current-turn { border-color:#c9a84c; box-shadow:0 0 20px rgba(201,168,76,0.15); }
+.enemy-zone.p1.current-turn { border-color:#2980b9; box-shadow:0 0 20px rgba(41,128,185,0.15); }
+.enemy-zone.p2.current-turn { border-color:#27ae60; box-shadow:0 0 20px rgba(39,174,96,0.15); }
+.enemy-zone.p3.current-turn { border-color:#8e44ad; box-shadow:0 0 20px rgba(142,68,173,0.15); }
+.ez-header { display:flex; align-items:center; gap:6px; flex-shrink:0; flex-wrap:wrap; }
+.ez-name { font-family:'Cinzel',serif; font-size:12px; font-weight:600; padding:2px 8px; border-left:3px solid; letter-spacing:1px; }
+.enemy-zone.p0 .ez-name { border-color:#c9a84c; color:#c9a84c; }
+.enemy-zone.p1 .ez-name { border-color:#2980b9; color:#2980b9; }
+.enemy-zone.p2 .ez-name { border-color:#27ae60; color:#27ae60; }
+.enemy-zone.p3 .ez-name { border-color:#8e44ad; color:#8e44ad; }
+.ez-active { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--gold); background:rgba(201,168,76,0.1); padding:2px 6px; border:1px solid rgba(201,168,76,0.3); margin-left:auto; }
+.ez-hp { font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:var(--gold); }
+.ez-cards { display:flex; gap:6px; align-items:flex-end; }
+.ez-stat { font-size:12px; color:var(--text2); }
+.towers-cards { display:flex; gap:6px; }
 
-.pz-header { display:flex; align-items:center; gap:8px; flex-shrink:0; }
-.pz-name { font-family:'Cinzel',serif; font-size:13px; font-weight:600; padding:2px 10px; border-left:3px solid; letter-spacing:1px; }
-.p0 .pz-name { border-color:#c9a84c; color:#c9a84c; }
-.p1 .pz-name { border-color:#2980b9; color:#2980b9; }
-.p2 .pz-name { border-color:#27ae60; color:#27ae60; }
-.p3 .pz-name { border-color:#8e44ad; color:#8e44ad; }
-.pz-tag { font-size:12px; color:var(--text2); }
-.pz-active { font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; color:var(--gold); background:rgba(201,168,76,0.1); padding:2px 8px; border:1px solid rgba(201,168,76,0.3); margin-left:auto; }
-.pz-me-tag { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--text2); background:var(--bg3); padding:2px 6px; border:1px solid var(--border); }
-.pz-dc-tag { font-size:11px; color:#666; }
-
-.pz-body { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
-.pz-left { display:flex; flex-direction:column; gap:6px; }
-.zone-lbl { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--text2); margin-bottom:2px; }
-.zone-lbl.lbl-def { color:#5b8dd4; }
-.zone-lbl.lbl-atk { color:var(--red2); }
-.zone-lbl.lbl-chg { color:#8e44ad; }
-.zone-val { font-family:'Cinzel',serif; font-size:12px; font-weight:600; margin-top:4px; }
-.zone-val.gold { color:var(--gold); }
-.pz-defense-block { display:flex; flex-direction:column; }
-.pz-towers-block  { display:flex; flex-direction:column; }
-.towers-cards     { display:flex; gap:6px; }
-.pz-right { display:flex; flex-direction:column; gap:6px; border-left:1px solid var(--border); padding-left:16px; margin-left:4px; }
-.attack-block { display:flex; flex-direction:column; }
+/* MY ZONE */
+.my-zone { flex-shrink:0; background:var(--bg3); border-top:2px solid var(--gold); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+.my-zone-header { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.my-name { font-family:'Cinzel',serif; font-size:14px; font-weight:700; padding:2px 10px; border-left:3px solid var(--gold); color:var(--gold); }
+.my-zone-hp { font-family:'Cinzel',serif; font-size:13px; font-weight:600; color:var(--gold); margin-left:auto; }
+.my-cards { display:flex; gap:12px; align-items:flex-end; justify-content:center; flex-wrap:wrap; }
+.card-group { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.card-group-lbl { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--text2); text-align:center; }
+.card-group-lbl.lbl-def    { color:#5b8dd4; }
+.card-group-lbl.lbl-tour   { color:var(--gold); }
+.card-group-lbl.lbl-pioche { color:var(--red2); }
+.card-group-lbl.lbl-chg    { color:#9b59b6; }
+.card-group-sep { width:1px; background:var(--border); align-self:stretch; margin:0 2px; flex-shrink:0; }
 
 /* CARDS */
 .card { width:var(--cw); height:var(--ch); border-radius:6px; border:1px solid #333; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; font-family:'Crimson Text',serif; user-select:none; flex-shrink:0; }
@@ -191,21 +183,21 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .card.drawn-card  { border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,0.3); }
 .card.empty { border:1px dashed #2a2a3a; background:transparent; opacity:0.2; }
 
-/* ACTION PANEL */
-.action-panel { position:fixed; bottom:0; left:0; right:0; background:var(--bg2); border-top:2px solid var(--gold); padding:12px 20px; display:flex; align-items:center; gap:14px; z-index:100; flex-wrap:wrap; }
-.ap-lbl  { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--gold); flex-shrink:0; }
-.ap-desc { font-size:15px; color:var(--text2); flex:1; min-width:160px; }
-.ap-desc strong { color:var(--text); }
-.ap-btns { display:flex; gap:8px; flex-wrap:wrap; }
-.btn-act { padding:9px 18px; border:1px solid; font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; background:transparent; }
-.btn-act.atk { border-color:var(--red2); color:var(--red2); }
-.btn-act.atk:hover { background:rgba(231,76,60,0.1); }
-.btn-act.def { border-color:var(--blue2); color:var(--blue2); }
-.btn-act.def:hover { background:rgba(41,128,185,0.1); }
-.btn-act.chg { border-color:#8e44ad; color:#9b59b6; }
-.btn-act.chg:hover { background:rgba(155,89,182,0.1); }
-.btn-act:disabled { opacity:0.3; cursor:not-allowed; }
-.waiting-turn { font-family:'Cinzel',serif; font-size:13px; color:var(--text2); letter-spacing:1px; padding:8px 0; }
+/* ACTION BAR */
+.action-bar { flex-shrink:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px 12px; background:var(--bg2); border-top:2px solid var(--gold); }
+.btn-action { padding:14px 8px; border:2px solid; font-family:'Cinzel',serif; font-size:13px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; background:transparent; border-radius:4px; display:flex; align-items:center; justify-content:center; gap:6px; }
+.btn-action.atk { border-color:var(--red2); color:var(--red2); }
+.btn-action.atk:hover:not(:disabled) { background:rgba(231,76,60,0.15); }
+.btn-action.def { border-color:var(--blue2); color:var(--blue2); }
+.btn-action.def:hover:not(:disabled) { background:rgba(41,128,185,0.15); }
+.btn-action.chg { border-color:#8e44ad; color:#9b59b6; }
+.btn-action.chg:hover:not(:disabled) { background:rgba(155,89,182,0.15); }
+.btn-action.dis { border-color:#555; color:#888; }
+.btn-action.dis:hover:not(:disabled) { background:rgba(136,136,136,0.1); }
+.btn-action.pact { border-color:#e8a020; color:#e8a020; grid-column:1/-1; }
+.btn-action.pact:hover:not(:disabled) { background:rgba(232,160,32,0.1); }
+.btn-action:disabled { opacity:0.3; cursor:not-allowed; }
+.waiting-msg { grid-column:1/-1; font-family:'Cinzel',serif; font-size:13px; color:var(--text2); text-align:center; padding:12px; letter-spacing:1px; }
 
 /* OVERLAYS */
 .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; padding:20px; }
@@ -240,7 +232,7 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .btn-restart:hover { background:rgba(201,168,76,0.1); }
 
 /* LOG */
-.log-panel { position:fixed; right:0; top:48px; bottom:80px; width:260px; background:var(--bg2); border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:50; transform:translateX(100%); transition:transform 0.3s; }
+.log-panel { position:fixed; right:0; top:48px; bottom:0; width:260px; background:var(--bg2); border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:50; transform:translateX(100%); transition:transform 0.3s; }
 .log-panel.open { transform:translateX(0); }
 .log-header { padding:10px 14px; border-bottom:1px solid var(--border); font-family:'Cinzel',serif; font-size:10px; letter-spacing:3px; color:var(--gold); }
 .log-entries { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:5px; }
@@ -385,12 +377,9 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
       <button class="btn-sm" onclick="openOverlay('rules-modal')">📖 Règles</button>
     </div>
   </div>
-  <div class="game-area" id="game-area"></div>
-  <div class="action-panel" id="action-panel">
-    <div class="ap-lbl">ACTION</div>
-    <div class="ap-desc" id="ap-desc">—</div>
-    <div class="ap-btns" id="ap-btns"></div>
-  </div>
+  <div class="enemies-area" id="enemies-area"></div>
+  <div class="my-zone" id="my-zone"></div>
+  <div class="action-bar" id="action-bar"></div>
   <button class="log-toggle" id="log-toggle-btn" onclick="document.getElementById('log-panel').classList.toggle('open')">📜 Journal</button>
   <div class="log-panel" id="log-panel">
     <div class="log-header">JOURNAL</div>
@@ -767,167 +756,200 @@ function updateMyTurnBadge() {
 }
 
 function renderGame() {
-  const n    = G.players.length;
-  const area = document.getElementById('game-area');
-  const pos  = POSITIONS[n];
-  area.className = `game-area p${n}`;
-  area.innerHTML = '';
+  const enemiesEl = document.getElementById('enemies-area');
+  const myZoneEl  = document.getElementById('my-zone');
 
-  G.players.forEach((p, i) => {
-    const position = pos[i];
-    const isCur    = (i === G.turn && !p.eliminated && G.phase !== 'ended');
-    const isMe     = (p.id === myId);
-    const totalHP  = p.towers.reduce((s, t) => s + t.val, 0);
-    const chargedV = p.charged ? p.charged.val : 0;
+  const me      = G.players.find(p => p.id === myId);
+  const enemies = G.players.filter(p => p.id !== myId);
 
+  // ── Adversaires (haut) ──
+  enemiesEl.innerHTML = '';
+  enemies.forEach(p => {
+    const i     = G.players.indexOf(p);
+    const isCur = (i === G.turn && !p.eliminated && G.phase !== 'ended');
+    const totalHP = p.towers.reduce((s, t) => s + t.val, 0);
     const pactInfo = (G.pactEnabled && p.pact)
-      ? `<span class="pact-badge">🤝 Pacte ${p.pact.turnsLeft}T</span>` : '';
-
-    // "Rompre le pacte" button: shown only to the protected player during their turn
-    const breakPactBtn = (G.pactEnabled && p.pact && p.pact.role === 'protected' && isMe && isCur)
-      ? `<button onclick="doBreakPact()" style="font-size:11px;padding:2px 8px;background:none;border:1px solid #e8a020;color:#e8a020;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:1px;">Rompre</button>` : '';
+      ? `<span class="pact-badge">🤝 ${p.pact.turnsLeft}T</span>` : '';
 
     const zone = document.createElement('div');
-    zone.className = `player-zone ${PCOLORS[i]} ${isCur ? 'current-turn' : ''} ${p.eliminated ? 'eliminated' : ''} ${isMe ? 'is-me' : ''} ${G.pactEnabled && p.pact ? 'zone-pacted' : ''}`;
-    zone.dataset.pos = position;
+    zone.className = `enemy-zone ${PCOLORS[i]} ${isCur ? 'current-turn' : ''} ${p.eliminated ? 'eliminated' : ''} ${G.pactEnabled && p.pact ? 'zone-pacted' : ''}`;
 
-    const meTag = isMe ? '<span class="pz-me-tag">VOUS</span>' : '';
-    const dcTag = p.disconnected ? '<span class="pz-dc-tag">⚠️ déconnecté</span>' : '';
+    if (p.eliminated) {
+      zone.innerHTML = `<div class="ez-header">
+        <div class="ez-name">${escHtml(p.name)}</div>
+        <span style="color:var(--red2);font-size:12px;margin-left:auto">💀 ÉLIMINÉ</span>
+      </div>`;
+      enemiesEl.appendChild(zone);
+      return;
+    }
 
-    const header = `<div class="pz-header">
-      <div class="pz-name">${escHtml(p.name)}</div>
-      ${meTag}${dcTag}
-      ${p.eliminated ? '<span class="pz-tag" style="color:var(--red2)">💀 ÉLIMINÉ</span>' : ''}
-      ${pactInfo}${breakPactBtn}
-      ${isCur ? '<span class="pz-active">◆ ACTIF</span>' : ''}
-    </div>`;
-
-    if (p.eliminated) { zone.innerHTML = header; area.appendChild(zone); return; }
-
-    const defVal = p.defense ? p.defense.val : 0;
     const t0 = p.towers[0] || null;
     const t1 = p.towers[1] || null;
-    const t0v = t0 ? t0.val : 0;
-    const t1v = t1 ? t1.val : 0;
+    const chargedV = p.charged ? p.charged.val : 0;
 
-    const defBlock = `<div class="pz-defense-block" style="display:flex;flex-direction:column;align-items:center;width:142px;">
-      <div class="zone-lbl lbl-def" style="align-self:flex-start">DÉFENSE${defVal ? ` — ${defVal}` : '  —  aucune'}</div>
-      ${cardHTML(p.defense, 'def-card')}
+    const towersHTML = `<div class="ez-cards">
+      ${cardHTML(t0, `tower${t0 && t0.val/14 < 0.4 ? ' damaged' : ''}`)}
+      ${t1 ? cardHTML(t1, `tower${t1.val/14 < 0.4 ? ' damaged' : ''}`) : ''}
     </div>`;
 
-    const towersBlock = `<div class="pz-towers-block">
-      <div class="towers-cards">
-        ${cardHTML(t0, `tower${t0 && t0.val / 14 < 0.4 ? ' damaged' : ''}`)}
-        ${cardHTML(t1, `tower${t1 && t1.val / 14 < 0.4 ? ' damaged' : ''}`)}
-      </div>
-      <div class="zone-val gold">Tours : ${t0v} + ${t1v} = ${totalHP} PV</div>
-    </div>`;
+    const defStr = p.defense
+      ? `🛡 Défense : <strong style="color:var(--text)">${p.defense.val}</strong>`
+      : '<span style="color:#555">🔓 Sans défense</span>';
 
-    let rightBlock = '';
-
-    if (isCur && isMe && G.drawnCard) {
-      // My turn — show drawn card
+    let activeHTML = '';
+    if (isCur && G.drawnCard) {
       const totalAtk = G.drawnCard.val + chargedV;
-      let stackHTML = '';
+      const lbl = chargedV > 0
+        ? `Pioche + chargée = <strong style="color:var(--red2)">${totalAtk}</strong>`
+        : `Pioche : <strong style="color:var(--text)">${G.drawnCard.val}</strong>`;
+      let stack = '';
       if (p.charged) {
-        stackHTML = `<div style="position:relative;width:calc(var(--cw) + 8px);height:var(--ch)">
-          <div style="position:absolute;top:-6px;left:0;z-index:1">${cardHTML(p.charged, 'charge-card')}</div>
-          <div style="position:absolute;top:0;left:8px;z-index:2">${cardHTML(G.drawnCard, 'drawn-card')}</div>
+        stack = `<div style="position:relative;width:calc(var(--cw) + 10px);height:var(--ch)">
+          <div style="position:absolute;top:-5px;left:0;z-index:1">${cardHTML(p.charged,'charge-card')}</div>
+          <div style="position:absolute;top:0;left:10px;z-index:2">${cardHTML(G.drawnCard,'drawn-card')}</div>
         </div>`;
       } else {
-        stackHTML = cardHTML(G.drawnCard, 'drawn-card card-deal');
+        stack = cardHTML(G.drawnCard, 'drawn-card');
       }
-      const piocheLabel = chargedV > 0
-        ? `PIOCHE (${G.drawnCard.val}) + CHARGÉ (${chargedV}) = <strong style="color:var(--red2)">${totalAtk} si attaque</strong>`
-        : `PIOCHE : ${G.drawnCard.val}`;
-      rightBlock = `<div class="attack-block">
-        <div class="zone-lbl lbl-atk">${piocheLabel}</div>
-        ${stackHTML}
-      </div>`;
-    } else if (isCur && !isMe && G.drawnCard) {
-      // Other player's turn — show their drawn card (all info is public)
-      const totalAtk = G.drawnCard.val + chargedV;
-      let stackHTML = '';
-      if (p.charged) {
-        stackHTML = `<div style="position:relative;width:calc(var(--cw) + 8px);height:var(--ch)">
-          <div style="position:absolute;top:-6px;left:0;z-index:1">${cardHTML(p.charged, 'charge-card')}</div>
-          <div style="position:absolute;top:0;left:8px;z-index:2">${cardHTML(G.drawnCard, 'drawn-card')}</div>
-        </div>`;
-      } else {
-        stackHTML = cardHTML(G.drawnCard, 'drawn-card');
-      }
-      const label = chargedV > 0
-        ? `PIOCHE (${G.drawnCard.val}) + CHARGÉ (${chargedV}) = <strong style="color:var(--red2)">${totalAtk}</strong>`
-        : `PIOCHE : ${G.drawnCard.val}`;
-      rightBlock = `<div class="attack-block">
-        <div class="zone-lbl lbl-atk">${label}</div>
-        ${stackHTML}
+      activeHTML = `<div style="margin-top:4px">
+        <div class="card-group-lbl lbl-pioche" style="margin-bottom:4px">${lbl}</div>
+        <div style="display:flex;gap:6px;align-items:flex-end">${stack}</div>
       </div>`;
     } else if (p.charged) {
-      rightBlock = `<div class="attack-block">
-        <div class="zone-lbl lbl-chg">CHARGÉ : ${chargedV}</div>
-        ${cardHTML(p.charged, 'charge-card')}
+      activeHTML = `<div style="margin-top:4px">
+        <div class="card-group-lbl lbl-chg" style="margin-bottom:4px">⚡ Chargée : ${chargedV}</div>
+        ${cardHTML(p.charged,'charge-card')}
       </div>`;
     }
 
-    zone.innerHTML = `${header}
-      <div class="pz-body">
-        <div class="pz-left">
-          ${defBlock}
-          ${towersBlock}
-        </div>
-        <div class="pz-right" style="display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--border);padding-left:16px;margin-left:4px;">
-          ${rightBlock || '<span style="color:var(--border);font-size:12px">—</span>'}
-        </div>
-      </div>`;
+    zone.innerHTML = `
+      <div class="ez-header">
+        <div class="ez-name">${escHtml(p.name)}</div>
+        ${p.disconnected ? '<span style="font-size:11px;color:#666" title="Déconnecté">⚠️</span>' : ''}
+        ${pactInfo}
+        ${isCur ? '<span class="ez-active">◆ ACTIF</span>' : ''}
+      </div>
+      <div class="ez-hp">${totalHP} PV</div>
+      ${towersHTML}
+      <div class="ez-stat">${defStr}</div>
+      ${activeHTML}`;
 
-    area.appendChild(zone);
+    enemiesEl.appendChild(zone);
   });
+
+  // ── Ma zone (centre) ──
+  if (!me) { myZoneEl.innerHTML = ''; return; }
+
+  if (me.eliminated) {
+    myZoneEl.innerHTML = `<div class="my-zone-header">
+      <div class="my-name">${escHtml(me.name)}</div>
+      <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text2);background:var(--bg2);padding:2px 6px;border:1px solid var(--border)">VOUS</span>
+      <span style="color:var(--red2);margin-left:auto">💀 ÉLIMINÉ</span>
+    </div>`;
+    return;
+  }
+
+  const mi       = G.players.indexOf(me);
+  const myHP     = me.towers.reduce((s, t) => s + t.val, 0);
+  const myChgV   = me.charged ? me.charged.val : 0;
+  const myPact   = (G.pactEnabled && me.pact)
+    ? `<span class="pact-badge">🤝 Pacte ${me.pact.turnsLeft}T</span>` : '';
+  const breakBtn = (G.pactEnabled && me.pact && me.pact.role === 'protected' && isMyTurn())
+    ? `<button onclick="doBreakPact()" style="font-size:11px;padding:2px 8px;background:none;border:1px solid #e8a020;color:#e8a020;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:1px;">Rompre</button>` : '';
+
+  // Groupe défense
+  const defGroup = `<div class="card-group">
+    <div class="card-group-lbl lbl-def">DÉFENSE</div>
+    ${cardHTML(me.defense, 'def-card')}
+    <div style="font-family:'Cinzel',serif;font-size:11px;color:#5b8dd4">${me.defense ? me.defense.val : '—'}</div>
+  </div>`;
+
+  // Groupe tours
+  const mt0 = me.towers[0] || null;
+  const mt1 = me.towers[1] || null;
+  const towerGroup = `<div class="card-group">
+    <div class="card-group-lbl lbl-tour">TOURS — ${myHP} PV</div>
+    <div class="towers-cards">
+      ${cardHTML(mt0, `tower${mt0 && mt0.val/14 < 0.4 ? ' damaged' : ''}`)}
+      ${mt1 ? cardHTML(mt1, `tower${mt1.val/14 < 0.4 ? ' damaged' : ''}`) : `<div class="card empty"></div>`}
+    </div>
+  </div>`;
+
+  // Groupe carte active
+  let activeGroup = '';
+  if (isMyTurn() && G.drawnCard) {
+    const total = G.drawnCard.val + myChgV;
+    const lbl = myChgV > 0
+      ? `PIOCHE+CHARGÉE = <strong style="color:var(--red2)">${total}</strong>`
+      : `PIOCHE : ${G.drawnCard.val}`;
+    let stack = '';
+    if (me.charged) {
+      stack = `<div style="position:relative;width:calc(var(--cw) + 10px);height:var(--ch)">
+        <div style="position:absolute;top:-5px;left:0;z-index:1">${cardHTML(me.charged,'charge-card')}</div>
+        <div style="position:absolute;top:0;left:10px;z-index:2">${cardHTML(G.drawnCard,'drawn-card card-deal')}</div>
+      </div>`;
+    } else {
+      stack = cardHTML(G.drawnCard, 'drawn-card card-deal');
+    }
+    activeGroup = `<div class="card-group">
+      <div class="card-group-lbl lbl-pioche">${lbl}</div>
+      ${stack}
+    </div>`;
+  } else if (me.charged) {
+    activeGroup = `<div class="card-group">
+      <div class="card-group-lbl lbl-chg">CHARGÉE : ${myChgV}</div>
+      ${cardHTML(me.charged, 'charge-card')}
+    </div>`;
+  }
+
+  myZoneEl.innerHTML = `
+    <div class="my-zone-header">
+      <div class="my-name">${escHtml(me.name)}</div>
+      <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text2);background:var(--bg2);padding:2px 6px;border:1px solid var(--border)">VOUS</span>
+      ${myPact}${breakBtn}
+      <div class="my-zone-hp">${myHP} PV</div>
+    </div>
+    <div class="my-cards">
+      ${defGroup}
+      <div class="card-group-sep"></div>
+      ${towerGroup}
+      ${activeGroup ? `<div class="card-group-sep"></div>${activeGroup}` : ''}
+    </div>`;
 }
 
 function renderActionPanel() {
-  const desc = document.getElementById('ap-desc');
-  const btns = document.getElementById('ap-btns');
+  const bar = document.getElementById('action-bar');
 
   if (!G || G.phase === 'ended') {
-    desc.innerHTML = 'Partie terminée.';
-    btns.innerHTML = '';
+    bar.innerHTML = '<div class="waiting-msg">Partie terminée.</div>';
     return;
   }
 
   if (!isMyTurn()) {
     const cur = G.players[G.turn];
-    if (cur && cur.isAI) {
-      desc.innerHTML = `<span class="waiting-turn">🤖 <strong>${escHtml(cur.name)}</strong> réfléchit…</span>`;
-    } else {
-      desc.innerHTML = `<span class="waiting-turn">En attente de <strong>${cur ? escHtml(cur.name) : '?'}</strong>…</span>`;
-    }
-    btns.innerHTML = '';
+    const msg = (cur && cur.isAI)
+      ? `🤖 <strong>${escHtml(cur.name)}</strong> réfléchit…`
+      : `En attente de <strong>${cur ? escHtml(cur.name) : '?'}</strong>…`;
+    bar.innerHTML = `<div class="waiting-msg">${msg}</div>`;
     return;
   }
 
   if (!G.drawnCard) {
-    desc.innerHTML = 'En attente de la pioche…';
-    btns.innerHTML = '';
+    bar.innerHTML = '<div class="waiting-msg">En attente de la pioche…</div>';
     return;
   }
 
   const p  = G.players.find(pl => pl.id === myId);
-  const cv = p.charged ? p.charged.val : 0;
-  const total = G.drawnCard.val + cv;
-  const ci = cv > 0 ? ` + ${cv} chargé = <strong style="color:var(--red2)">${total} si attaque</strong>` : '';
-  desc.innerHTML = `Carte piochée : <strong>${cs(G.drawnCard)}</strong> (${G.drawnCard.val}${ci}) — Que faire ?`;
-
   const tgts = G.players.filter(t => !t.eliminated && t.id !== myId);
   const attackEnabled = tgts.filter(t => !(isPactProtected(p, t) && G.pactBreach === 'block')).length > 0;
   const pactBtn = canProposePact(p)
-    ? `<button class="btn-act" style="border-color:#e8a020;color:#e8a020;" onclick="doPact()">🤝 Pacte</button>` : '';
+    ? `<button class="btn-action pact" onclick="doPact()">🤝 Proposer un Pacte</button>` : '';
 
-  btns.innerHTML = `
-    <button class="btn-act atk" onclick="doAttack()" ${!attackEnabled ? 'disabled' : ''}>⚔ Attaquer</button>
-    <button class="btn-act def" onclick="doDefend()">🛡 Défendre</button>
-    <button class="btn-act chg" onclick="doCharge()">⚡ Charger${p.charged ? ' (remplace)' : ''}</button>
-    <button class="btn-act" style="border-color:#555;color:#888;" onclick="doDiscard()">🗑 Défausser</button>
+  bar.innerHTML = `
+    <button class="btn-action atk" onclick="doAttack()" ${!attackEnabled ? 'disabled' : ''}>⚔ Attaquer</button>
+    <button class="btn-action def" onclick="doDefend()">🛡 Défendre</button>
+    <button class="btn-action chg" onclick="doCharge()">⚡ Charger${p.charged ? ' ✓' : ''}</button>
+    <button class="btn-action dis" onclick="doDiscard()">🗑 Défausser</button>
     ${pactBtn}`;
 }
 
