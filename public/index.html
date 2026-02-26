@@ -130,52 +130,47 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .my-turn-badge.visible { display:inline-block; animation:badgePulse 1s ease infinite; }
 @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
 
-/* GAME LAYOUT - 3 SECTIONS */
-.game-container { display:flex; flex-direction:column; flex:1; min-height:0; }
+/* GAME LAYOUT */
+.game-container { 
+  display:flex; 
+  flex-direction:column; 
+  flex:1; 
+  min-height:0;
+  padding:16px;
+  gap:16px;
+}
 
 /* ADVERSAIRES SECTION (top) */
 .adversaires-section { 
   flex:0 0 auto; 
-  background:var(--bg2); 
-  border-bottom:2px solid var(--gold); 
-  padding:12px 16px; 
   overflow-x:auto; 
   overflow-y:hidden;
-  min-height:140px;
-}
-.adversaires-label { 
-  font-family:'Cinzel',serif; 
-  font-size:10px; 
-  letter-spacing:3px; 
-  color:var(--gold); 
-  margin-bottom:8px; 
-  display:block;
 }
 .adversaires-grid { 
   display:flex; 
-  gap:12px; 
+  gap:8px; 
   align-items:flex-start;
 }
 
-/* ENEMY CARD */
+/* ENEMY CARD - compact */
 .enemy-card { 
   flex:0 0 auto; 
-  width:160px; 
+  width:120px; 
   background:var(--bg3); 
   border:1px solid var(--border); 
   border-radius:4px; 
-  padding:8px; 
+  padding:6px; 
   display:flex; 
   flex-direction:column; 
-  gap:6px;
+  gap:4px;
   transition:border-color 0.3s,box-shadow 0.3s;
 }
 .enemy-card.current-turn { 
   border-color:var(--gold); 
-  box-shadow:0 0 20px rgba(201,168,76,0.15);
+  box-shadow:0 0 15px rgba(201,168,76,0.2);
 }
 .enemy-card.eliminated { 
-  opacity:0.35; 
+  opacity:0.3; 
   filter:grayscale(1);
 }
 .enemy-card.p0.current-turn { border-color:#c9a84c; }
@@ -183,127 +178,129 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .enemy-card.p2.current-turn { border-color:#27ae60; }
 .enemy-card.p3.current-turn { border-color:#8e44ad; }
 
-.enemy-card-header { 
-  display:flex; 
-  align-items:center; 
-  gap:6px; 
-  flex-wrap:wrap;
-}
 .enemy-card-name { 
   font-family:'Cinzel',serif; 
-  font-size:11px; 
+  font-size:10px; 
   font-weight:600; 
-  padding:2px 6px; 
+  padding:1px 4px; 
   border-left:2px solid; 
-  letter-spacing:1px;
+  letter-spacing:0.5px;
 }
 .enemy-card.p0 .enemy-card-name { border-color:#c9a84c; color:#c9a84c; }
 .enemy-card.p1 .enemy-card-name { border-color:#2980b9; color:#2980b9; }
 .enemy-card.p2 .enemy-card-name { border-color:#27ae60; color:#27ae60; }
 .enemy-card.p3 .enemy-card-name { border-color:#8e44ad; color:#8e44ad; }
 
-.enemy-card-active { 
-  font-family:'Cinzel',serif; 
-  font-size:8px; 
-  letter-spacing:2px; 
-  color:var(--gold); 
-  background:rgba(201,168,76,0.1); 
-  padding:2px 5px; 
-  border:1px solid rgba(201,168,76,0.3); 
-  margin-left:auto;
-}
 .enemy-card-hp { 
   font-family:'Cinzel',serif; 
-  font-size:16px; 
+  font-size:13px; 
   font-weight:700; 
   color:var(--gold);
 }
 .enemy-card-towers { 
   display:flex; 
-  gap:4px;
+  gap:3px;
 }
-.enemy-card-def { 
-  font-size:11px; 
-  color:var(--text2);
+.enemy-card-towers .card { 
+  width:50px; 
+  height:70px;
 }
 
-/* MIDDLE SECTION - Défense/Charge/Pioche */
-.middle-section { 
-  flex:0 0 auto; 
-  background:var(--bg3); 
-  border-bottom:2px solid var(--gold); 
-  padding:12px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+/* MAIN PLAYER AREA */
+.player-main { 
+  flex:1; 
+  display:grid; 
+  grid-template-columns:1fr 1fr; 
+  gap:20px; 
+  min-height:0;
 }
-.middle-label { 
-  font-family:'Cinzel',serif; 
-  font-size:10px; 
-  letter-spacing:3px; 
-  color:var(--gold);
-}
-.middle-cards { 
-  display:flex; 
-  gap:16px; 
-  align-items:flex-end; 
-  justify-content:center;
-  flex-wrap:wrap;
-}
-.card-group { 
+
+/* LEFT SIDE - Defense */
+.player-left { 
   display:flex; 
   flex-direction:column; 
-  align-items:center; 
-  gap:4px;
+  gap:12px;
 }
-.card-group-lbl { 
+.player-name { 
   font-family:'Cinzel',serif; 
-  font-size:9px; 
-  letter-spacing:2px; 
-  color:var(--text2); 
-  text-align:center;
+  font-size:16px; 
+  font-weight:700; 
+  color:var(--gold); 
+  letter-spacing:2px;
 }
-.card-group-lbl.lbl-def    { color:#5b8dd4; }
-.card-group-lbl.lbl-chg    { color:#9b59b6; }
-.card-group-lbl.lbl-pioche { color:var(--red2); }
-.card-group-sep { 
-  width:1px; 
-  background:var(--border); 
-  align-self:stretch; 
-  margin:0 4px; 
-  flex-shrink:0;
-}
-
-/* TOURS SECTION (player towers) */
-.tours-section { 
-  flex:0 0 auto; 
-  background:var(--bg2); 
-  border-bottom:2px solid var(--gold); 
-  padding:12px 16px;
-  display:flex;
-  flex-direction:column;
+.defense-group { 
+  display:flex; 
+  flex-direction:column; 
   gap:8px;
 }
-.tours-label { 
+.defense-label { 
   font-family:'Cinzel',serif; 
-  font-size:10px; 
-  letter-spacing:3px; 
-  color:var(--gold);
+  font-size:11px; 
+  letter-spacing:2px; 
+  color:#5b8dd4;
 }
-.tours-content { 
+.defense-card-wrapper { 
   display:flex; 
-  gap:12px; 
-  align-items:flex-end; 
   justify-content:center;
 }
-.tours-towers { 
+
+/* RIGHT SIDE - Pioche */
+.player-right { 
+  display:flex; 
+  flex-direction:column; 
+  gap:12px;
+}
+.pioche-group { 
+  display:flex; 
+  flex-direction:column; 
+  gap:8px;
+}
+.pioche-label { 
+  font-family:'Cinzel',serif; 
+  font-size:11px; 
+  letter-spacing:2px; 
+  color:var(--red2);
+}
+.pioche-card-wrapper { 
+  display:flex; 
+  justify-content:center;
+}
+
+/* BOTTOM - Towers & Actions */
+.player-bottom { 
+  flex:0 0 auto; 
+  display:flex; 
+  flex-direction:column; 
+  gap:12px;
+}
+.towers-group { 
+  display:flex; 
+  flex-direction:column; 
+  gap:8px;
+}
+.towers-label { 
+  font-family:'Cinzel',serif; 
+  font-size:11px; 
+  letter-spacing:2px; 
+  color:var(--gold);
+}
+.towers-display { 
+  display:flex; 
+  gap:12px; 
+  align-items:flex-end;
+}
+.towers-cards { 
   display:flex; 
   gap:8px;
 }
-.tours-hp { 
+.towers-cards .card { 
+  width:60px; 
+  height:84px;
+}
+.towers-hp { 
   font-family:'Cinzel',serif; 
   font-size:14px; 
-  font-weight:600; 
+  font-weight:700; 
   color:var(--gold);
 }
 
@@ -323,12 +320,12 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .card.drawn-card  { border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,0.3); }
 .card.empty { border:1px dashed #2a2a3a; background:transparent; opacity:0.2; }
 
-/* ACTION BAR */
+/* ACTION BAR - Ergonomic */
 .action-bar { 
   flex-shrink:0; 
   display:grid; 
-  grid-template-columns:1fr 1fr; 
-  gap:8px; 
+  grid-template-columns:repeat(4, 1fr); 
+  gap:10px; 
   padding:12px 16px; 
   background:var(--bg2); 
   border-top:2px solid var(--gold);
@@ -527,26 +524,44 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   </div>
   
   <div class="game-container">
-    <!-- ADVERSAIRES SECTION -->
-    <div class="adversaires-section">
-      <span class="adversaires-label">ADVERSAIRES</span>
+    <!-- ADVERSAIRES (top, compact) -->
+    <div class="adversaires-section" id="adversaires-section">
       <div class="adversaires-grid" id="adversaires-grid"></div>
     </div>
     
-    <!-- MIDDLE SECTION: Défense/Charge/Pioche -->
-    <div class="middle-section">
-      <span class="middle-label">DÉFENSE / CHARGE / PIOCHE</span>
-      <div class="middle-cards" id="middle-cards"></div>
+    <!-- MAIN PLAYER AREA -->
+    <div class="player-main">
+      <!-- LEFT: Defense -->
+      <div class="player-left">
+        <div class="player-name" id="player-name">—</div>
+        <div class="defense-group">
+          <div class="defense-label">DÉFENSE</div>
+          <div class="defense-card-wrapper" id="defense-card-wrapper"></div>
+        </div>
+      </div>
+      
+      <!-- RIGHT: Pioche -->
+      <div class="player-right">
+        <div style="height:16px"></div>
+        <div class="pioche-group" id="pioche-group" style="display:none">
+          <div class="pioche-label">PIOCHE</div>
+          <div class="pioche-card-wrapper" id="pioche-card-wrapper"></div>
+        </div>
+      </div>
     </div>
     
-    <!-- TOURS SECTION -->
-    <div class="tours-section">
-      <span class="tours-label">TOURS</span>
-      <div class="tours-content" id="tours-content"></div>
+    <!-- BOTTOM: Towers & Actions -->
+    <div class="player-bottom">
+      <div class="towers-group">
+        <div class="towers-label">TOURS</div>
+        <div class="towers-display">
+          <div class="towers-cards" id="towers-cards"></div>
+          <div class="towers-hp" id="towers-hp">— PV</div>
+        </div>
+      </div>
+      
+      <div class="action-bar" id="action-bar"></div>
     </div>
-    
-    <!-- ACTION BAR -->
-    <div class="action-bar" id="action-bar"></div>
   </div>
   
   <button class="log-toggle" id="log-toggle-btn" onclick="document.getElementById('log-panel').classList.toggle('open')">📜 Journal</button>
@@ -926,133 +941,93 @@ function updateMyTurnBadge() {
 
 function renderGame() {
   const adversairesEl = document.getElementById('adversaires-grid');
-  const middleEl      = document.getElementById('middle-cards');
-  const toursEl       = document.getElementById('tours-content');
+  const playerNameEl  = document.getElementById('player-name');
+  const defenseEl     = document.getElementById('defense-card-wrapper');
+  const piocheGroupEl = document.getElementById('pioche-group');
+  const piocheEl      = document.getElementById('pioche-card-wrapper');
+  const towersEl      = document.getElementById('towers-cards');
+  const towersHpEl    = document.getElementById('towers-hp');
 
   const me      = G.players.find(p => p.id === myId);
   const enemies = G.players.filter(p => p.id !== myId);
 
-  // ── ADVERSAIRES (top) ──
+  // ── ADVERSAIRES (compact, top) ──
   adversairesEl.innerHTML = '';
   enemies.forEach(p => {
     const i     = G.players.indexOf(p);
     const isCur = (i === G.turn && !p.eliminated && G.phase !== 'ended');
     const totalHP = p.towers.reduce((s, t) => s + t.val, 0);
-    const pactInfo = (G.pactEnabled && p.pact)
-      ? `<span class="pact-badge">🤝 ${p.pact.turnsLeft}T</span>` : '';
 
     const card = document.createElement('div');
-    card.className = `enemy-card ${PCOLORS[i]} ${isCur ? 'current-turn' : ''} ${p.eliminated ? 'eliminated' : ''} ${G.pactEnabled && p.pact ? 'zone-pacted' : ''}`;
+    card.className = `enemy-card ${PCOLORS[i]} ${isCur ? 'current-turn' : ''} ${p.eliminated ? 'eliminated' : ''}`;
 
     if (p.eliminated) {
       card.innerHTML = `
-        <div class="enemy-card-header">
-          <div class="enemy-card-name">${escHtml(p.name)}</div>
-          <span style="color:var(--red2);font-size:11px;margin-left:auto">💀 ÉLIMINÉ</span>
-        </div>`;
+        <div class="enemy-card-name">${escHtml(p.name)}</div>
+        <span style="color:var(--red2);font-size:10px">💀</span>`;
       adversairesEl.appendChild(card);
       return;
     }
 
     const t0 = p.towers[0] || null;
     const t1 = p.towers[1] || null;
-    const chargedV = p.charged ? p.charged.val : 0;
 
     const towersHTML = `<div class="enemy-card-towers">
       ${cardHTML(t0, `tower${t0 && t0.val/14 < 0.4 ? ' damaged' : ''}`)}
       ${t1 ? cardHTML(t1, `tower${t1.val/14 < 0.4 ? ' damaged' : ''}`) : ''}
     </div>`;
 
-    const defStr = p.defense
-      ? `🛡 ${p.defense.val}`
-      : '<span style="color:#555">🔓</span>';
-
-    let activeHTML = '';
-    if (isCur && G.drawnCard) {
-      const totalAtk = G.drawnCard.val + chargedV;
-      const lbl = chargedV > 0
-        ? `Pioche+Chargée: <strong style="color:var(--red2)">${totalAtk}</strong>`
-        : `Pioche: <strong style="color:var(--text)">${G.drawnCard.val}</strong>`;
-      activeHTML = `<div style="font-size:10px;color:var(--text2);margin-top:4px">${lbl}</div>`;
-    }
-
     card.innerHTML = `
-      <div class="enemy-card-header">
-        <div class="enemy-card-name">${escHtml(p.name)}</div>
-        ${p.disconnected ? '<span style="font-size:10px;color:#666" title="Déconnecté">⚠️</span>' : ''}
-        ${pactInfo}
-        ${isCur ? '<span class="enemy-card-active">◆ ACTIF</span>' : ''}
-      </div>
-      <div class="enemy-card-hp">${totalHP} PV</div>
-      ${towersHTML}
-      <div class="enemy-card-def">${defStr}</div>
-      ${activeHTML}`;
+      <div class="enemy-card-name">${escHtml(p.name)}</div>
+      <div class="enemy-card-hp">${totalHP}</div>
+      ${towersHTML}`;
 
     adversairesEl.appendChild(card);
   });
 
-  // ── MIDDLE SECTION: Défense/Charge/Pioche ──
-  if (!me || me.eliminated) {
-    middleEl.innerHTML = '';
-  } else {
-    const myChgV = me.charged ? me.charged.val : 0;
-    
-    // Défense group
-    const defGroup = `<div class="card-group">
-      <div class="card-group-lbl lbl-def">DÉFENSE</div>
-      ${cardHTML(me.defense, 'def-card')}
-      <div style="font-family:'Cinzel',serif;font-size:11px;color:#5b8dd4">${me.defense ? me.defense.val : '—'}</div>
-    </div>`;
-
-    // Charge group
-    let chargeGroup = '';
-    if (me.charged) {
-      chargeGroup = `<div class="card-group">
-        <div class="card-group-lbl lbl-chg">CHARGÉE</div>
-        ${cardHTML(me.charged, 'charge-card')}
-        <div style="font-family:'Cinzel',serif;font-size:11px;color:#9b59b6">${myChgV}</div>
-      </div>`;
-    }
-
-    // Pioche group (drawn card)
-    let piocheGroup = '';
-    if (isMyTurn() && G.drawnCard) {
-      const total = G.drawnCard.val + myChgV;
-      const lbl = myChgV > 0
-        ? `PIOCHE+CHARGÉE = <strong style="color:var(--red2)">${total}</strong>`
-        : `PIOCHE`;
-      piocheGroup = `<div class="card-group">
-        <div class="card-group-lbl lbl-pioche">${lbl}</div>
-        ${cardHTML(G.drawnCard, 'drawn-card card-deal')}
-        <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--red2)">${G.drawnCard.val}</div>
-      </div>`;
-    }
-
-    const sep = chargeGroup || piocheGroup ? '<div class="card-group-sep"></div>' : '';
-    middleEl.innerHTML = `${defGroup}${sep}${chargeGroup}${piocheGroup ? '<div class="card-group-sep"></div>' + piocheGroup : ''}`;
+  // ── PLAYER INFO ──
+  if (!me) {
+    playerNameEl.textContent = '—';
+    defenseEl.innerHTML = '';
+    piocheGroupEl.style.display = 'none';
+    towersEl.innerHTML = '';
+    towersHpEl.textContent = '— PV';
+    return;
   }
 
-  // ── TOURS SECTION ──
-  if (!me || me.eliminated) {
-    toursEl.innerHTML = '';
-  } else {
-    const myHP = me.towers.reduce((s, t) => s + t.val, 0);
-    const mt0 = me.towers[0] || null;
-    const mt1 = me.towers[1] || null;
-    const myPact = (G.pactEnabled && me.pact)
-      ? `<span class="pact-badge">🤝 Pacte ${me.pact.turnsLeft}T</span>` : '';
-    const breakBtn = (G.pactEnabled && me.pact && me.pact.role === 'protected' && isMyTurn())
-      ? `<button onclick="doBreakPact()" style="font-size:11px;padding:2px 8px;background:none;border:1px solid #e8a020;color:#e8a020;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:1px;">Rompre</button>` : '';
-
-    toursEl.innerHTML = `
-      <div class="tours-towers">
-        ${cardHTML(mt0, `tower${mt0 && mt0.val/14 < 0.4 ? ' damaged' : ''}`)}
-        ${mt1 ? cardHTML(mt1, `tower${mt1.val/14 < 0.4 ? ' damaged' : ''}`) : `<div class="card empty"></div>`}
-      </div>
-      <div class="tours-hp">${myHP} PV</div>
-      ${myPact}
-      ${breakBtn}`;
+  if (me.eliminated) {
+    playerNameEl.textContent = escHtml(me.name);
+    defenseEl.innerHTML = '<div style="color:var(--red2);font-size:14px">💀 ÉLIMINÉ</div>';
+    piocheGroupEl.style.display = 'none';
+    towersEl.innerHTML = '';
+    towersHpEl.textContent = '— PV';
+    return;
   }
+
+  // Player name
+  playerNameEl.textContent = escHtml(me.name);
+
+  // Defense card
+  defenseEl.innerHTML = cardHTML(me.defense, 'def-card');
+
+  // Pioche (drawn card) - only show on my turn
+  if (isMyTurn() && G.drawnCard) {
+    piocheGroupEl.style.display = 'flex';
+    piocheEl.innerHTML = cardHTML(G.drawnCard, 'drawn-card card-deal');
+  } else {
+    piocheGroupEl.style.display = 'none';
+  }
+
+  // Towers
+  const myHP = me.towers.reduce((s, t) => s + t.val, 0);
+  const mt0 = me.towers[0] || null;
+  const mt1 = me.towers[1] || null;
+  
+  towersEl.innerHTML = `
+    ${cardHTML(mt0, `tower${mt0 && mt0.val/14 < 0.4 ? ' damaged' : ''}`)}
+    ${mt1 ? cardHTML(mt1, `tower${mt1.val/14 < 0.4 ? ' damaged' : ''}`) : `<div class="card empty"></div>`}
+  `;
+  towersHpEl.textContent = `${myHP} PV`;
 }
 
 function renderActionPanel() {
@@ -1081,12 +1056,12 @@ function renderActionPanel() {
   const tgts = G.players.filter(t => !t.eliminated && t.id !== myId);
   const attackEnabled = tgts.filter(t => !(isPactProtected(p, t) && G.pactBreach === 'block')).length > 0;
   const pactBtn = canProposePact(p)
-    ? `<button class="btn-action pact" onclick="doPact()">🤝 Proposer un Pacte</button>` : '';
+    ? `<button class="btn-action pact" onclick="doPact()">🤝 Pacte</button>` : '';
 
   bar.innerHTML = `
     <button class="btn-action atk" onclick="doAttack()" ${!attackEnabled ? 'disabled' : ''}>⚔ Attaquer</button>
     <button class="btn-action def" onclick="doDefend()">🛡 Défendre</button>
-    <button class="btn-action chg" onclick="doCharge()">⚡ Charger${p.charged ? ' ✓' : ''}</button>
+    <button class="btn-action chg" onclick="doCharge()">⚡ Charger</button>
     <button class="btn-action dis" onclick="doDiscard()">🗑 Défausser</button>
     ${pactBtn}`;
 }
