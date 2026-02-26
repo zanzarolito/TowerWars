@@ -146,17 +146,16 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   display:grid;
   grid-template-columns:repeat(3, 1fr);
   gap:16px;
-  max-width:100%;
 }
 
-/* ENEMY CARD - full display */
+/* ENEMY CARD */
 .enemy-card { 
   background:var(--bg3); 
   border:2px solid var(--border); 
   border-radius:8px; 
   padding:12px; 
-  display:flex; 
-  flex-direction:column; 
+  display:grid;
+  grid-template-columns:1fr 1fr;
   gap:12px;
   transition:border-color 0.3s,box-shadow 0.3s;
   min-height:200px;
@@ -181,22 +180,39 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   padding:2px 6px; 
   border-left:3px solid; 
   letter-spacing:1px;
+  grid-column:1/-1;
 }
 .enemy-card.p0 .enemy-card-name { border-color:#c9a84c; color:#c9a84c; }
 .enemy-card.p1 .enemy-card-name { border-color:#2980b9; color:#2980b9; }
 .enemy-card.p2 .enemy-card-name { border-color:#27ae60; color:#27ae60; }
 .enemy-card.p3 .enemy-card-name { border-color:#8e44ad; color:#8e44ad; }
 
-.enemy-card-content { 
+.enemy-card-left { 
   display:flex; 
   flex-direction:column; 
   gap:12px;
 }
 
-.enemy-card-row { 
+.enemy-card-right { 
   display:flex; 
-  gap:8px; 
-  align-items:flex-end;
+  flex-direction:column; 
+  gap:12px;
+}
+
+.enemy-card-charge { 
+  display:flex; 
+  flex-direction:column; 
+  gap:4px;
+}
+.enemy-card-charge-label { 
+  font-family:'Cinzel',serif; 
+  font-size:9px; 
+  letter-spacing:1px; 
+  color:#9b59b6;
+}
+.enemy-card-charge .card { 
+  width:60px; 
+  height:84px;
 }
 
 .enemy-card-def { 
@@ -211,8 +227,8 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   color:#5b8dd4;
 }
 .enemy-card-def .card { 
-  width:50px; 
-  height:70px;
+  width:60px; 
+  height:84px;
 }
 
 .enemy-card-pioche { 
@@ -227,14 +243,15 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   color:var(--red2);
 }
 .enemy-card-pioche .card { 
-  width:50px; 
-  height:70px;
+  width:60px; 
+  height:84px;
 }
 
 .enemy-card-towers { 
   display:flex; 
   flex-direction:column; 
   gap:4px;
+  grid-column:1/-1;
 }
 .enemy-card-towers-label { 
   font-family:'Cinzel',serif; 
@@ -252,7 +269,7 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 }
 .enemy-card-towers-hp { 
   font-family:'Cinzel',serif; 
-  font-size:12px; 
+  font-size:11px; 
   font-weight:700; 
   color:var(--gold);
 }
@@ -260,9 +277,9 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 /* MAIN PLAYER AREA */
 .player-main { 
   flex:1; 
-  display:flex; 
-  flex-direction:column; 
-  gap:16px; 
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:20px; 
   min-height:0;
   background:var(--bg3);
   border:2px solid var(--border);
@@ -276,14 +293,25 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   font-weight:700; 
   color:var(--gold); 
   letter-spacing:2px;
+  grid-column:1/-1;
 }
 
-.player-cards { 
+.player-left { 
   display:flex; 
-  gap:24px; 
-  align-items:flex-end; 
-  justify-content:flex-start;
-  flex-wrap:wrap;
+  flex-direction:column; 
+  gap:12px;
+}
+
+.player-center { 
+  display:flex; 
+  flex-direction:column; 
+  gap:12px;
+}
+
+.player-right { 
+  display:flex; 
+  flex-direction:column; 
+  gap:12px;
 }
 
 .player-defense { 
@@ -298,6 +326,22 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   color:#5b8dd4;
 }
 .player-defense .card { 
+  width:70px; 
+  height:98px;
+}
+
+.player-pioche { 
+  display:flex; 
+  flex-direction:column; 
+  gap:8px;
+}
+.player-pioche-label { 
+  font-family:'Cinzel',serif; 
+  font-size:11px; 
+  letter-spacing:2px; 
+  color:var(--red2);
+}
+.player-pioche .card { 
   width:70px; 
   height:98px;
 }
@@ -322,6 +366,7 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
   display:flex; 
   flex-direction:column; 
   gap:8px;
+  grid-column:1/-1;
 }
 .player-towers-label { 
   font-family:'Cinzel',serif; 
@@ -358,7 +403,7 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .card.def-card    { border-color:#5b8dd4; box-shadow:0 0 8px rgba(91,141,212,0.25); }
 .card.charge-card { border:2px dashed #8e44ad; box-shadow:0 0 8px rgba(142,68,173,0.35); }
 .card.drawn-card  { border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,0.3); }
-.card.empty { border:1px dashed #2a2a3a; background:transparent; opacity:0.2; }
+.card.empty { border:1px dashed #2a2a3a; background:#1a1a24; opacity:0.5; }
 
 /* ACTION BAR - Ergonomic */
 .action-bar { 
@@ -567,22 +612,36 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
     <!-- ADVERSAIRES (top, 3 columns) -->
     <div class="adversaires-section" id="adversaires-grid"></div>
     
-    <!-- MAIN PLAYER AREA -->
+    <!-- MAIN PLAYER AREA (3 columns: Defense | Pioche | Charge) -->
     <div class="player-main">
       <div class="player-name" id="player-name">—</div>
-      <div class="player-cards">
+      
+      <!-- LEFT: Defense + Towers -->
+      <div class="player-left">
         <div class="player-defense">
           <div class="player-defense-label">DÉFENSE — <span id="def-val">—</span></div>
           <div id="defense-card-wrapper"></div>
-        </div>
-        <div class="player-charge" id="player-charge-group" style="display:none">
-          <div class="player-charge-label">CHARGÉ — <span id="charge-val">—</span></div>
-          <div id="charge-card-wrapper"></div>
         </div>
         <div class="player-towers">
           <div class="player-towers-label">TOURS</div>
           <div class="player-towers-cards" id="towers-cards"></div>
           <div class="player-towers-hp" id="towers-hp">— PV</div>
+        </div>
+      </div>
+      
+      <!-- CENTER: Pioche -->
+      <div class="player-center">
+        <div class="player-pioche">
+          <div class="player-pioche-label">PIOCHE — <span id="pioche-val">—</span></div>
+          <div id="pioche-card-wrapper"></div>
+        </div>
+      </div>
+      
+      <!-- RIGHT: Charge -->
+      <div class="player-right">
+        <div class="player-charge" id="player-charge-group" style="display:none">
+          <div class="player-charge-label">CHARGÉ — <span id="charge-val">—</span></div>
+          <div id="charge-card-wrapper"></div>
         </div>
       </div>
     </div>
@@ -971,6 +1030,8 @@ function renderGame() {
   const playerNameEl  = document.getElementById('player-name');
   const defenseEl     = document.getElementById('defense-card-wrapper');
   const defValEl      = document.getElementById('def-val');
+  const piocheEl      = document.getElementById('pioche-card-wrapper');
+  const piocheValEl   = document.getElementById('pioche-val');
   const chargeGroupEl = document.getElementById('player-charge-group');
   const chargeEl      = document.getElementById('charge-card-wrapper');
   const chargeValEl   = document.getElementById('charge-val');
@@ -993,7 +1054,7 @@ function renderGame() {
     if (p.eliminated) {
       card.innerHTML = `
         <div class="enemy-card-name">${escHtml(p.name)}</div>
-        <div style="color:var(--red2);font-size:12px;text-align:center">💀 ÉLIMINÉ</div>`;
+        <div style="color:var(--red2);font-size:12px;text-align:center;grid-column:1/-1">💀 ÉLIMINÉ</div>`;
       adversairesEl.appendChild(card);
       return;
     }
@@ -1004,16 +1065,11 @@ function renderGame() {
 
     card.innerHTML = `
       <div class="enemy-card-name">${escHtml(p.name)}</div>
-      <div class="enemy-card-content">
-        <div class="enemy-card-row">
-          <div class="enemy-card-def">
-            <div class="enemy-card-def-label">DÉFENSE — ${defCard ? defCard.val : '—'}</div>
-            ${cardHTML(defCard, 'def-card')}
-          </div>
-          <div class="enemy-card-pioche">
-            <div class="enemy-card-pioche-label">PIOCHE</div>
-            ${isCur && G.drawnCard ? cardHTML(G.drawnCard, 'drawn-card') : '<div class="card empty"></div>'}
-          </div>
+      
+      <div class="enemy-card-left">
+        <div class="enemy-card-def">
+          <div class="enemy-card-def-label">DÉFENSE — ${defCard ? defCard.val : '—'}</div>
+          ${cardHTML(defCard, 'def-card')}
         </div>
         <div class="enemy-card-towers">
           <div class="enemy-card-towers-label">TOURS</div>
@@ -1023,6 +1079,17 @@ function renderGame() {
           </div>
           <div class="enemy-card-towers-hp">${totalHP} PV</div>
         </div>
+      </div>
+      
+      <div class="enemy-card-right">
+        <div class="enemy-card-pioche">
+          <div class="enemy-card-pioche-label">PIOCHE</div>
+          ${isCur && G.drawnCard ? cardHTML(G.drawnCard, 'drawn-card') : '<div class="card empty"></div>'}
+        </div>
+        ${p.charged ? `<div class="enemy-card-charge">
+          <div class="enemy-card-charge-label">CHARGÉ — ${p.charged.val}</div>
+          ${cardHTML(p.charged, 'charge-card')}
+        </div>` : ''}
       </div>`;
 
     adversairesEl.appendChild(card);
@@ -1033,6 +1100,8 @@ function renderGame() {
     playerNameEl.textContent = '—';
     defenseEl.innerHTML = '';
     defValEl.textContent = '—';
+    piocheEl.innerHTML = '';
+    piocheValEl.textContent = '—';
     chargeGroupEl.style.display = 'none';
     towersEl.innerHTML = '';
     towersHpEl.textContent = '— PV';
@@ -1043,6 +1112,8 @@ function renderGame() {
     playerNameEl.textContent = escHtml(me.name);
     defenseEl.innerHTML = '<div style="color:var(--red2);font-size:14px;text-align:center">💀 ÉLIMINÉ</div>';
     defValEl.textContent = '—';
+    piocheEl.innerHTML = '';
+    piocheValEl.textContent = '—';
     chargeGroupEl.style.display = 'none';
     towersEl.innerHTML = '';
     towersHpEl.textContent = '— PV';
@@ -1055,6 +1126,15 @@ function renderGame() {
   // Defense card
   defenseEl.innerHTML = cardHTML(me.defense, 'def-card');
   defValEl.textContent = me.defense ? me.defense.val : '—';
+
+  // Pioche (drawn card) - only show on my turn
+  if (isMyTurn() && G.drawnCard) {
+    piocheEl.innerHTML = cardHTML(G.drawnCard, 'drawn-card card-deal');
+    piocheValEl.textContent = G.drawnCard.val;
+  } else {
+    piocheEl.innerHTML = '<div class="card empty"></div>';
+    piocheValEl.textContent = '—';
+  }
 
   // Charge card
   if (me.charged) {
