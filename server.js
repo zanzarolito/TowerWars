@@ -54,7 +54,7 @@ function getRoomInfo(room) {
   return {
     code:    room.code,
     host:    room.host,
-    players: room.players.map(p => ({ id: p.id, name: p.name, index: p.index })),
+    players: room.players.map(p => ({ id: p.id, name: p.name, index: p.index, isAI: !!p.isAI })),
     options: room.options
   };
 }
@@ -100,6 +100,158 @@ function findCardByValue(st, val) {
 function addLog(st, msg, type) {
   st.log.push({ msg, type, ts: Date.now() });
   if (st.log.length > 120) st.log = st.log.slice(-120);
+}
+
+// ─── IA — Scoring ────────────────────────────────────────────────────────────
+function aiThreat(me, enemy) {
+  const enemyAtk = 14 + (enemy.charged ? enemy.charged.val : 0);
+  const myDef    = me.defense ? me.defense.val : 0;
+  const myHP     = me.towers.reduce((s, t) => s + t.val, 0);
+  const potDmg   = Math.max(0, enemyAtk - myDef);
+  return potDmg / Math.max(1, myHP);
+}
+
+function aiScoreAttack(st, p, target, totalAtk) {
+  const dv  = target.defense ? target.defense.val : 0;
+  const dmg = totalAtk - dv;
+  if (dmg <= 0) return -Infinity;
+  const hp         = target.towers.reduce((s, t) => s + t.val, 0);
+  const alive      = st.players.filter(q => !q.eliminated);
+  const isLastAlive = alive.length === 2;
+  let score = 0;
+  if (dmg >= hp)      score += isLastAlive ? 10000 : 200;
+  if (dv === 0)       score += 60;
+  if (target.charged) score += 30;
+  score += (28 - hp) * 2;
+  score += dmg + (dmg / Math.max(1, hp)) * 20;
+  if (dv > 0 && dmg < 3) score -= 20;
+  return score;
+}
+
+function aiScoreCharge(st, p, card, targets) {
+  if (p.charged)   return -Infinity;
+  if (card.val < 5) return -Infinity;
+  const futureAtk   = card.val + card.val;
+  const unlocks     = targets.some(t => { const dv = t.defense ? t.defense.val : 0; return card.val <= dv && futureAtk > dv; });
+  const noTargetNow = targets.every(t => { const dv = t.defense ? t.defense.val : 0; return card.val <= dv; });
+  let score = 0;
+  if (noTargetNow && unlocks) score += 40 + card.val * 2;
+  if (targets.length > 0) {
+    const strongest = targets.reduce((a, b) =>
+      b.towers.reduce((s, t) => s + t.val, 0) > a.towers.reduce((s, t) => s + t.val, 0) ? b : a, targets[0]);
+    if (aiThreat(p, strongest) > 0.6) score -= 30;
+  }
+  return score;
+}
+
+function aiScoreDefend(st, p, card, targets) {
+  const myDef = p.defense ? p.defense.val : 0;
+  if (card.val <= myDef) return -Infinity;
+  const myHP  = p.towers.reduce((s, t) => s + t.val, 0);
+  const gain  = card.val - myDef;
+  let score = gain * 3;
+  if (targets.length > 0) {
+    const maxThreat = Math.max(...targets.map(t => aiThreat(p, t)));
+    if (maxThreat > 0.5) score += maxThreat * 50;
+  }
+  if (!p.defense) score += 40;
+  if (myHP < 10)  score += 30;
+  if (myHP > 15 && myDef >= 8) score -= 20;
+  return score;
+}
+
+function aiScorePact(st, p, targets) {
+  if (!st.pactEnabled)       return -Infinity;
+  if (p.towers.length !== 1) return -Infinity;
+  if (p.pact)                return -Infinity;
+  if (targets.length === 0)  return -Infinity;
+  const myHP  = p.towers.reduce((s, t) => s + t.val, 0);
+  const myDef = p.defense ? p.defense.val : 0;
+  const threats = targets.map(t => Math.max(0, (t.charged ? t.charged.val : 7) + 4 - myDef));
+  const maxThreat = Math.max(...threats);
+  let score = (maxThreat / Math.max(1, myHP)) * 60;
+  if (maxThreat >= myHP) score += 80;
+  if (threats.filter(t => t > 0).length >= 2) score += 30;
+  const canAtk = targets.some(t => (p.charged ? p.charged.val : 0) + 7 > (t.defense ? t.defense.val : 0));
+  if (canAtk && myHP > 5) score -= 40;
+  return score;
+}
+
+function aiBestPactAlly(p, targets) {
+  return targets.filter(t => !t.pact && !t.eliminated).sort((a, b) => {
+    const av = (a.charged ? a.charged.val : 0) + a.towers.reduce((s, t) => s + t.val, 0) / 10;
+    const bv = (b.charged ? b.charged.val : 0) + b.towers.reduce((s, t) => s + t.val, 0) / 10;
+    return av - bv;
+  })[0] || null;
+}
+
+// ─── IA — Tour automatique ────────────────────────────────────────────────────
+function runAiTurn(room) {
+  const st = room.state;
+  if (!st || st.phase === 'ended') return;
+  const p = st.players[st.turn];
+  if (!p || !p.isAI || p.eliminated) return;
+
+  const card    = st.drawnCard;
+  const targets = st.players.filter(t => !t.eliminated && t.id !== p.id);
+
+  if (!card || !targets.length) {
+    if (card) { st.discard.push(card); st.drawnCard = null; }
+    advanceTurn(st);
+    io.to(room.code).emit('game_state', { state: safeState(st), banner: null });
+    scheduleAiTurnIfNeeded(room);
+    return;
+  }
+
+  const chargedV = p.charged ? p.charged.val : 0;
+  const totalAtk = card.val + chargedV;
+
+  let bestTarget = null, bestAtkScore = -Infinity;
+  for (const t of targets) {
+    if (st.pactEnabled && st.pactBreach === 'block' && isPactProtected(st, p, t)) continue;
+    const s = aiScoreAttack(st, p, t, totalAtk);
+    if (s > bestAtkScore) { bestAtkScore = s; bestTarget = t; }
+  }
+  const chargeScore = aiScoreCharge(st, p, card, targets);
+  const defendScore = aiScoreDefend(st, p, card, targets);
+  const pactScore   = aiScorePact(st, p, targets);
+  const best        = Math.max(
+    isFinite(bestAtkScore) ? bestAtkScore : -Infinity,
+    isFinite(chargeScore)  ? chargeScore  : -Infinity,
+    isFinite(defendScore)  ? defendScore  : -Infinity,
+    isFinite(pactScore)    ? pactScore    : -Infinity
+  );
+
+  let result;
+  if (best === pactScore && pactScore > -Infinity) {
+    const ally = aiBestPactAlly(p, targets);
+    result = ally ? processAction(st, p.id, { type: 'pact', targetId: ally.id })
+                  : processAction(st, p.id, { type: 'discard' });
+  } else if (best === bestAtkScore && bestAtkScore > -Infinity && bestTarget) {
+    result = processAction(st, p.id, { type: 'attack', targetId: bestTarget.id });
+  } else if (best === chargeScore && chargeScore > -Infinity) {
+    result = processAction(st, p.id, { type: 'charge' });
+  } else if (best === defendScore && defendScore > -Infinity) {
+    result = processAction(st, p.id, { type: 'defend' });
+  } else {
+    result = processAction(st, p.id, { type: 'discard' });
+  }
+
+  io.to(room.code).emit('game_state', {
+    state:  safeState(st),
+    banner: (result && result.banner) ? result.banner : null
+  });
+  scheduleAiTurnIfNeeded(room);
+}
+
+function scheduleAiTurnIfNeeded(room) {
+  const st = room.state;
+  if (!st || st.phase === 'ended') return;
+  const cur = st.players[st.turn];
+  if (cur && cur.isAI && !cur.eliminated) {
+    if (room.aiTimeout) clearTimeout(room.aiTimeout);
+    room.aiTimeout = setTimeout(() => { room.aiTimeout = null; runAiTurn(room); }, 1200);
+  }
 }
 
 function canProposePact(st, p) {
@@ -201,6 +353,7 @@ function initGameState(room) {
       id:           p.id,
       name:         p.name,
       index:        i,
+      isAI:         !!p.isAI,
       towers,
       defense,
       charged:      null,
@@ -436,6 +589,7 @@ io.on('connection', socket => {
     room.started = true;
     room.state   = initGameState(room);
     io.to(room.code).emit('game_start', { state: safeState(room.state) });
+    scheduleAiTurnIfNeeded(room);
   });
 
   // ── Action de jeu ────────────────────────────────────────────────────────
@@ -452,6 +606,30 @@ io.on('connection', socket => {
       state:  safeState(room.state),
       banner: result.banner || null
     });
+    if (!result.stateOnly) scheduleAiTurnIfNeeded(room);
+  });
+
+  // ── Ajouter un joueur IA (hôte seulement) ───────────────────────────────
+  socket.on('add_ai', () => {
+    const room = rooms.get(socket.data.roomCode);
+    if (!room || room.host !== socket.id || room.started) return;
+    if (room.players.length >= 4) return socket.emit('error', { message: 'La salle est pleine (4 joueurs max).' });
+    const aiCount = room.players.filter(p => p.isAI).length;
+    const aiNames = ['IA Alpha', 'IA Bêta', 'IA Gamma', 'IA Delta'];
+    const aiId    = `ai_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    room.players.push({ id: aiId, name: aiNames[aiCount] || `IA ${aiCount + 1}`, index: room.players.length, isAI: true });
+    io.to(room.code).emit('room_update', getRoomInfo(room));
+  });
+
+  // ── Retirer un joueur IA (hôte seulement) ───────────────────────────────
+  socket.on('remove_ai', ({ aiId }) => {
+    const room = rooms.get(socket.data.roomCode);
+    if (!room || room.host !== socket.id || room.started) return;
+    const idx = room.players.findIndex(p => p.id === aiId && p.isAI);
+    if (idx < 0) return;
+    room.players.splice(idx, 1);
+    room.players.forEach((p, i) => { p.index = i; });
+    io.to(room.code).emit('room_update', getRoomInfo(room));
   });
 
   // ── Déconnexion ──────────────────────────────────────────────────────────
@@ -478,6 +656,7 @@ io.on('connection', socket => {
           advanceTurn(room.state);
         }
         io.to(code).emit('game_state', { state: safeState(room.state), banner: null });
+        scheduleAiTurnIfNeeded(room);
       }
     } else {
       room.players = room.players.filter(p => p.id !== socket.id);
