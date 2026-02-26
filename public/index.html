@@ -334,6 +334,10 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
       <div class="setup-label">JOUEURS CONNECTÉS</div>
       <div class="waiting-players" id="waiting-players"></div>
       <div class="waiting-hint" id="waiting-hint">En attente de joueurs… (2–4 joueurs)</div>
+      <div id="add-ai-section" style="display:none;margin-top:8px;text-align:center">
+        <button class="btn-start secondary" onclick="addAI()"
+          style="width:auto;padding:8px 22px;font-size:13px;margin-top:0">🤖 Ajouter une IA</button>
+      </div>
     </div>
 
     <!-- Options (hôte seulement) -->
@@ -539,6 +543,16 @@ function leaveRoom() {
   window.location.reload();
 }
 
+function addAI() {
+  if (!isHost) return;
+  socket.emit('add_ai');
+}
+
+function removeAI(aiId) {
+  if (!isHost) return;
+  socket.emit('remove_ai', { aiId });
+}
+
 function hostStartGame() {
   if (!isHost) return;
   socket.emit('start_game');
@@ -585,14 +599,20 @@ function renderWaitingRoom(info) {
   // Player list
   const list = document.getElementById('waiting-players');
   list.innerHTML = '';
-  players.forEach((p, i) => {
+  players.forEach((p) => {
     const div = document.createElement('div');
     div.className = 'waiting-player';
+    const removeBtn = (isHost && p.isAI)
+      ? `<button onclick="removeAI('${p.id}')" title="Retirer cette IA"
+           style="margin-left:auto;background:none;border:none;color:var(--red2);cursor:pointer;font-size:16px;line-height:1;padding:0 4px">✕</button>`
+      : '';
     div.innerHTML = `
       <div class="player-color-dot p${p.index}"></div>
-      <div class="waiting-player-name">${escHtml(p.name)}</div>
+      <div class="waiting-player-name">${p.isAI ? '🤖 ' : ''}${escHtml(p.name)}</div>
       ${p.id === host ? '<div class="waiting-player-tag">HÔTE</div>' : ''}
+      ${p.isAI        ? '<div class="waiting-player-tag" style="color:#2980b9">IA</div>' : ''}
       ${p.id === myId ? '<div class="waiting-player-tag" style="color:var(--text2)">VOUS</div>' : ''}
+      ${removeBtn}
     `;
     list.appendChild(div);
   });
@@ -601,6 +621,9 @@ function renderWaitingRoom(info) {
   hint.innerHTML = players.length < 2
     ? `En attente de joueurs… (<strong>min. 2</strong>)`
     : `<strong>${players.length}</strong> joueur${players.length > 1 ? 's' : ''} connecté${players.length > 1 ? 's' : ''}`;
+
+  // Bouton "Ajouter IA" (hôte uniquement, si < 4 joueurs)
+  document.getElementById('add-ai-section').style.display = (isHost && players.length < 4) ? '' : 'none';
 
   // Start button visibility
   if (isHost) {
@@ -874,7 +897,11 @@ function renderActionPanel() {
 
   if (!isMyTurn()) {
     const cur = G.players[G.turn];
-    desc.innerHTML = `<span class="waiting-turn">En attente de <strong>${cur ? cur.name : '?'}</strong>…</span>`;
+    if (cur && cur.isAI) {
+      desc.innerHTML = `<span class="waiting-turn">🤖 <strong>${escHtml(cur.name)}</strong> réfléchit…</span>`;
+    } else {
+      desc.innerHTML = `<span class="waiting-turn">En attente de <strong>${cur ? escHtml(cur.name) : '?'}</strong>…</span>`;
+    }
     btns.innerHTML = '';
     return;
   }
