@@ -1,0 +1,14 @@
+{
+  "name": "tower-wars",
+  "version": "1.0.0",
+  "description": "Tower Wars — Jeu de cartes stratégique multijoueur en ligne",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}
