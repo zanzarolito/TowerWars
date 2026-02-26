@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower Wars — Multijoueur</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --bg: #0d0d0f;
+  --bg2: #13131a;
+  --bg3: #1a1a24;
+  --border: #2a2a3a;
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --blue2: #2980b9;
+  --green2: #27ae60;
+  --text: #e8e0d0;
+  --text2: #a09080;
+  --cw: 68px;
+  --ch: 96px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+.screen { display:none; min-height:100vh; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* ══════════ LOBBY & WAITING ══════════ */
+#lobby-screen, #waiting-screen {
+  align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 50% 30%,#1a1224 0%,#0d0d0f 70%);
+  position:relative; overflow:hidden;
+}
+#lobby-screen::before, #waiting-screen::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(201,168,76,0.03) 40px,rgba(201,168,76,0.03) 41px),
+    repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(201,168,76,0.03) 40px,rgba(201,168,76,0.03) 41px);
+}
+
+.setup-box {
+  background:var(--bg2); border:1px solid var(--border); border-top:3px solid var(--gold);
+  padding:44px 52px; width:520px; box-shadow:0 20px 80px rgba(0,0,0,0.6); position:relative;
+}
+.title-main { font-family:'Cinzel',serif; font-size:46px; font-weight:900; color:var(--gold2); text-align:center; letter-spacing:4px; line-height:1; text-shadow:0 0 40px rgba(201,168,76,0.3); }
+.title-sub  { font-family:'Cinzel',serif; font-size:12px; color:var(--text2); text-align:center; letter-spacing:8px; margin-top:6px; margin-bottom:32px; }
+
+.lobby-sep { display:flex; align-items:center; gap:12px; margin:22px 0; }
+.lobby-sep::before, .lobby-sep::after { content:''; flex:1; height:1px; background:var(--border); }
+.lobby-sep span { font-family:'Cinzel',serif; font-size:10px; letter-spacing:3px; color:var(--text2); }
+
+.setup-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--gold); margin-bottom:10px; }
+.name-input {
+  width:100%; background:var(--bg3); border:1px solid var(--border);
+  color:var(--text); padding:10px 14px;
+  font-family:'Crimson Text',serif; font-size:18px; outline:none; transition:border-color 0.2s;
+}
+.name-input:focus { border-color:var(--gold); }
+
+.code-row { display:flex; gap:8px; }
+.code-input {
+  flex:1; background:var(--bg3); border:1px solid var(--border); color:var(--text);
+  padding:10px 14px; font-family:'Cinzel',serif; font-size:18px; letter-spacing:4px;
+  text-transform:uppercase; outline:none; transition:border-color 0.2s;
+}
+.code-input:focus { border-color:var(--gold); }
+.code-input::placeholder { text-transform:none; font-size:14px; letter-spacing:1px; color:var(--text2); }
+
+.btn-start {
+  width:100%; padding:15px; background:linear-gradient(135deg,#8b6914,#c9a84c); border:none;
+  color:#0d0d0f; font-family:'Cinzel',serif; font-size:14px; font-weight:700;
+  letter-spacing:3px; cursor:pointer; transition:all 0.2s; margin-top:8px;
+}
+.btn-start:hover { background:linear-gradient(135deg,#c9a84c,#e8c96a); transform:translateY(-1px); }
+.btn-start:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+.btn-start.secondary {
+  background:none; border:1px solid var(--gold); color:var(--gold);
+}
+.btn-start.secondary:hover { background:rgba(201,168,76,0.08); }
+
+/* Waiting room */
+.room-code-display {
+  font-family:'Cinzel',serif; font-size:36px; font-weight:900; letter-spacing:12px;
+  color:var(--gold2); text-align:center; padding:18px; background:var(--bg3);
+  border:1px solid var(--border); margin:16px 0; text-shadow:0 0 30px rgba(201,168,76,0.3);
+}
+.waiting-players { display:flex; flex-direction:column; gap:8px; margin:16px 0; }
+.waiting-player {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 14px; background:var(--bg3); border:1px solid var(--border);
+}
+.player-color-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.player-color-dot.p0 { background:#c9a84c; }
+.player-color-dot.p1 { background:#2980b9; }
+.player-color-dot.p2 { background:#27ae60; }
+.player-color-dot.p3 { background:#8e44ad; }
+.waiting-player-name { font-family:'Cinzel',serif; font-size:14px; color:var(--text); flex:1; }
+.waiting-player-tag { font-size:12px; color:var(--gold); font-family:'Cinzel',serif; letter-spacing:2px; }
+.waiting-hint { font-size:14px; color:var(--text2); text-align:center; margin:8px 0; }
+.waiting-hint strong { color:var(--text); }
+
+/* Options in waiting room */
+.option-row {
+  display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
+  background:var(--bg3); border:1px solid var(--border); margin-top:8px; transition:border-color 0.2s;
+}
+.option-row:hover { border-color:var(--gold); }
+.option-row input[type=checkbox] { width:16px; height:16px; accent-color:var(--gold); cursor:pointer; flex-shrink:0; margin-top:3px; }
+.option-row label { font-family:'Crimson Text',serif; font-size:15px; color:var(--text2); flex:1; }
+.option-row label strong { color:var(--text); }
+.option-sub { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.opt-radio { display:flex; align-items:center; gap:6px; padding:5px 10px; background:var(--bg); border:1px solid var(--border); cursor:pointer; font-size:13px; color:var(--text2); transition:all 0.2s; flex:1; white-space:nowrap; }
+.opt-radio:hover { border-color:var(--gold); color:var(--text); }
+.opt-radio input { accent-color:var(--gold); cursor:pointer; }
+.opts-disabled { opacity:0.4; pointer-events:none; }
+
+/* ══════════ GAME ══════════ */
+#game-screen { background:#0a0a10; flex-direction:column; min-height:100vh; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
+.topbar-title { font-family:'Cinzel',serif; font-size:18px; color:var(--gold); letter-spacing:3px; }
+.turn-info { font-family:'Cinzel',serif; font-size:13px; color:var(--text2); }
+.turn-info span { color:var(--gold2); }
+.topbar-right { display:flex; gap:8px; align-items:center; }
+.btn-sm { background:none; border:1px solid var(--border); color:var(--text2); padding:6px 14px; font-size:13px; cursor:pointer; font-family:'Crimson Text',serif; transition:all 0.2s; }
+.btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+.my-turn-badge { font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px; color:#0d0d0f; background:var(--gold); padding:4px 12px; display:none; }
+.my-turn-badge.visible { display:inline-block; animation:badgePulse 1s ease infinite; }
+@keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+/* GAME AREA */
+.game-area { flex:1; display:grid; gap:10px; padding:12px 12px 96px; overflow:auto; }
+.game-area.p2 { grid-template-areas:"top" "bottom"; grid-template-rows:1fr 1fr; }
+.game-area.p3 { grid-template-areas:"top top" "left bottom"; grid-template-rows:1fr 1fr; grid-template-columns:1fr 1fr; }
+.game-area.p4 { grid-template-areas:". top ." "left . right" ". bottom ."; grid-template-rows:1fr 1fr 1fr; grid-template-columns:1fr 1fr 1fr; }
+
+/* PLAYER ZONE */
+.player-zone { border:1px solid var(--border); background:var(--bg2); border-radius:4px; padding:12px 14px; position:relative; transition:border-color 0.3s,box-shadow 0.3s; display:flex; flex-direction:column; gap:8px; }
+.player-zone[data-pos="top"]    { grid-area:top; }
+.player-zone[data-pos="bottom"] { grid-area:bottom; }
+.player-zone[data-pos="left"]   { grid-area:left; }
+.player-zone[data-pos="right"]  { grid-area:right; }
+.player-zone.current-turn { border-color:var(--gold); box-shadow:0 0 20px rgba(201,168,76,0.12); }
+.player-zone.eliminated   { opacity:0.35; filter:grayscale(1); }
+.player-zone.is-me        { border-style:solid; }
+.player-zone.p0.current-turn { border-color:#c9a84c; box-shadow:0 0 20px rgba(201,168,76,0.15); }
+.player-zone.p1.current-turn { border-color:#2980b9; box-shadow:0 0 20px rgba(41,128,185,0.15); }
+.player-zone.p2.current-turn { border-color:#27ae60; box-shadow:0 0 20px rgba(39,174,96,0.15); }
+.player-zone.p3.current-turn { border-color:#8e44ad; box-shadow:0 0 20px rgba(142,68,173,0.15); }
+
+.pz-header { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.pz-name { font-family:'Cinzel',serif; font-size:13px; font-weight:600; padding:2px 10px; border-left:3px solid; letter-spacing:1px; }
+.p0 .pz-name { border-color:#c9a84c; color:#c9a84c; }
+.p1 .pz-name { border-color:#2980b9; color:#2980b9; }
+.p2 .pz-name { border-color:#27ae60; color:#27ae60; }
+.p3 .pz-name { border-color:#8e44ad; color:#8e44ad; }
+.pz-tag { font-size:12px; color:var(--text2); }
+.pz-active { font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; color:var(--gold); background:rgba(201,168,76,0.1); padding:2px 8px; border:1px solid rgba(201,168,76,0.3); margin-left:auto; }
+.pz-me-tag { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--text2); background:var(--bg3); padding:2px 6px; border:1px solid var(--border); }
+.pz-dc-tag { font-size:11px; color:#666; }
+
+.pz-body { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+.pz-left { display:flex; flex-direction:column; gap:6px; }
+.zone-lbl { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--text2); margin-bottom:2px; }
+.zone-lbl.lbl-def { color:#5b8dd4; }
+.zone-lbl.lbl-atk { color:var(--red2); }
+.zone-lbl.lbl-chg { color:#8e44ad; }
+.zone-val { font-family:'Cinzel',serif; font-size:12px; font-weight:600; margin-top:4px; }
+.zone-val.gold { color:var(--gold); }
+.pz-defense-block { display:flex; flex-direction:column; }
+.pz-towers-block  { display:flex; flex-direction:column; }
+.towers-cards     { display:flex; gap:6px; }
+.pz-right { display:flex; flex-direction:column; gap:6px; border-left:1px solid var(--border); padding-left:16px; margin-left:4px; }
+.attack-block { display:flex; flex-direction:column; }
+
+/* CARDS */
+.card { width:var(--cw); height:var(--ch); border-radius:6px; border:1px solid #333; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; font-family:'Crimson Text',serif; user-select:none; flex-shrink:0; }
+.card.face-up { background:#f8f4e8; color:#111; }
+.card.face-up.hearts,.card.face-up.diamonds { color:#c0392b; }
+.card.face-up.spades,.card.face-up.clubs   { color:#1a1a2a; }
+.card-corner { position:absolute; font-size:12px; font-weight:700; line-height:1; display:flex; flex-direction:column; align-items:center; gap:1px; }
+.card-corner.tl { top:4px; left:5px; }
+.card-corner.br { bottom:4px; right:5px; transform:rotate(180deg); }
+.card-suit-c { font-size:24px; line-height:1; }
+.card.tower   { border-width:2px; }
+.card.damaged { border-color:var(--red2); box-shadow:0 0 8px rgba(231,76,60,0.4); }
+.card.def-card    { border-color:#5b8dd4; box-shadow:0 0 8px rgba(91,141,212,0.25); }
+.card.charge-card { border:2px dashed #8e44ad; box-shadow:0 0 8px rgba(142,68,173,0.35); }
+.card.drawn-card  { border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,0.3); }
+.card.empty { border:1px dashed #2a2a3a; background:transparent; opacity:0.2; }
+
+/* ACTION PANEL */
+.action-panel { position:fixed; bottom:0; left:0; right:0; background:var(--bg2); border-top:2px solid var(--gold); padding:12px 20px; display:flex; align-items:center; gap:14px; z-index:100; flex-wrap:wrap; }
+.ap-lbl  { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--gold); flex-shrink:0; }
+.ap-desc { font-size:15px; color:var(--text2); flex:1; min-width:160px; }
+.ap-desc strong { color:var(--text); }
+.ap-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.btn-act { padding:9px 18px; border:1px solid; font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; background:transparent; }
+.btn-act.atk { border-color:var(--red2); color:var(--red2); }
+.btn-act.atk:hover { background:rgba(231,76,60,0.1); }
+.btn-act.def { border-color:var(--blue2); color:var(--blue2); }
+.btn-act.def:hover { background:rgba(41,128,185,0.1); }
+.btn-act.chg { border-color:#8e44ad; color:#9b59b6; }
+.btn-act.chg:hover { background:rgba(155,89,182,0.1); }
+.btn-act:disabled { opacity:0.3; cursor:not-allowed; }
+.waiting-turn { font-family:'Cinzel',serif; font-size:13px; color:var(--text2); letter-spacing:1px; padding:8px 0; }
+
+/* OVERLAYS */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; padding:20px; }
+.overlay.open { display:flex; }
+.ovbox { background:var(--bg2); border:1px solid var(--gold); padding:28px 32px; min-width:340px; max-width:540px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.8); }
+.ov-title { font-family:'Cinzel',serif; font-size:13px; letter-spacing:3px; color:var(--gold); margin-bottom:18px; }
+.ov-info  { font-size:15px; color:var(--text2); margin-bottom:18px; line-height:1.7; }
+.ov-info strong { color:var(--text); }
+.tgt-list { display:flex; flex-direction:column; gap:8px; }
+.tgt-btn { padding:13px 18px; background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:'Crimson Text',serif; font-size:17px; cursor:pointer; transition:all 0.2s; text-align:left; display:flex; justify-content:space-between; align-items:center; }
+.tgt-btn:hover { border-color:var(--red2); background:rgba(231,76,60,0.07); }
+.tgt-preview { font-size:13px; color:var(--text2); }
+.ov-cancel { margin-top:12px; width:100%; padding:10px; background:none; border:1px solid var(--border); color:var(--text2); font-family:'Crimson Text',serif; font-size:15px; cursor:pointer; }
+.ov-cancel:hover { border-color:var(--text2); }
+
+/* RULES MODAL */
+.modal-box { background:var(--bg2); border:1px solid var(--gold); padding:36px; max-width:620px; width:100%; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.8); }
+.modal-title { font-family:'Cinzel',serif; font-size:22px; color:var(--gold2); margin-bottom:20px; letter-spacing:2px; }
+.modal-box h4 { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--gold); margin:16px 0 6px; }
+.modal-box p  { color:var(--text2); font-size:16px; line-height:1.7; }
+.modal-box strong { color:var(--text); }
+.modal-close { display:block; margin-top:20px; padding:12px; background:none; border:1px solid var(--border); color:var(--text2); width:100%; font-family:'Crimson Text',serif; font-size:16px; cursor:pointer; }
+.modal-close:hover { border-color:var(--gold); color:var(--gold); }
+
+/* WINNER */
+#winner-screen { align-items:center; justify-content:center; background:radial-gradient(ellipse at 50% 40%,#1a1020 0%,#0d0d0f 70%); }
+.winner-box { text-align:center; padding:60px; }
+.w-lbl  { font-family:'Cinzel',serif; font-size:13px; letter-spacing:6px; color:var(--text2); margin-bottom:14px; }
+.w-name { font-family:'Cinzel',serif; font-size:52px; font-weight:900; color:var(--gold2); text-shadow:0 0 60px rgba(201,168,76,0.4); margin-bottom:8px; }
+.w-sub  { font-size:18px; color:var(--text2); font-style:italic; margin-bottom:44px; }
+.btn-restart { padding:15px 48px; background:none; border:2px solid var(--gold); color:var(--gold); font-family:'Cinzel',serif; font-size:13px; letter-spacing:4px; cursor:pointer; transition:all 0.3s; }
+.btn-restart:hover { background:rgba(201,168,76,0.1); }
+
+/* LOG */
+.log-panel { position:fixed; right:0; top:48px; bottom:80px; width:260px; background:var(--bg2); border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:50; transform:translateX(100%); transition:transform 0.3s; }
+.log-panel.open { transform:translateX(0); }
+.log-header { padding:10px 14px; border-bottom:1px solid var(--border); font-family:'Cinzel',serif; font-size:10px; letter-spacing:3px; color:var(--gold); }
+.log-entries { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:5px; }
+.log-entry { font-size:13px; color:var(--text2); line-height:1.5; padding-bottom:5px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.log-entry strong { color:var(--text); }
+.log-entry.atk { border-left:2px solid var(--red2); padding-left:6px; }
+.log-entry.def { border-left:2px solid var(--blue2); padding-left:6px; }
+.log-entry.chg { border-left:2px solid #8e44ad; padding-left:6px; }
+.log-entry.eli { border-left:2px solid var(--gold); padding-left:6px; color:var(--gold); }
+.log-toggle { position:fixed; right:16px; top:56px; background:var(--bg2); border:1px solid var(--border); color:var(--text2); padding:5px 11px; font-size:12px; cursor:pointer; z-index:60; font-family:'Crimson Text',serif; transition:all 0.2s; }
+.log-toggle:hover { border-color:var(--gold); color:var(--gold); }
+.log-toggle.new-event { border-color:var(--gold); color:var(--gold); animation:logPulse 0.8s ease 3; }
+@keyframes logPulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 12px rgba(201,168,76,0.5)} }
+
+/* NOTIF */
+.notif { position:fixed; top:58px; left:50%; transform:translateX(-50%) translateY(-16px); background:var(--bg2); border:1px solid var(--gold); padding:10px 22px; font-family:'Cinzel',serif; font-size:12px; letter-spacing:1px; color:var(--gold2); z-index:500; opacity:0; transition:all 0.3s; pointer-events:none; max-width:380px; text-align:center; }
+.notif.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.notif.err  { border-color:var(--red2); color:var(--red2); }
+.notif.ok   { border-color:var(--green2); color:var(--green2); }
+
+/* PACT */
+.pact-badge { display:inline-flex; align-items:center; gap:5px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:1px; color:#e8a020; background:rgba(232,160,32,0.1); border:1px solid rgba(232,160,32,0.4); padding:2px 8px; border-radius:2px; }
+@keyframes zonePact { 0%,100%{box-shadow:0 0 0 rgba(232,160,32,0)} 50%{box-shadow:0 0 24px 4px rgba(232,160,32,0.4)} }
+.zone-pacted { border-color:#e8a020 !important; animation:zonePact 2s ease infinite; }
+
+/* EVENT BANNER */
+#event-banner {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(0.8);
+  background:var(--bg2); border:2px solid var(--gold);
+  padding:20px 40px; font-family:'Cinzel',serif; font-size:18px; letter-spacing:2px;
+  color:var(--gold2); z-index:600; opacity:0; pointer-events:none;
+  text-align:center; max-width:480px; box-shadow:0 10px 60px rgba(0,0,0,0.8);
+  transition:none; white-space:nowrap;
+}
+#event-banner.show { animation:bannerIn 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+#event-banner.hide { animation:bannerOut 0.2s ease forwards; }
+@keyframes bannerIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.8)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+@keyframes bannerOut { from{opacity:1;transform:translate(-50%,-50%) scale(1)} to{opacity:0;transform:translate(-50%,-50%) scale(0.9)} }
+#event-banner.atk { border-color:var(--red2);  color:var(--red2); }
+#event-banner.def { border-color:var(--blue2); color:var(--blue2); }
+#event-banner.chg { border-color:#8e44ad;      color:#b07fd4; }
+#event-banner.blk { border-color:var(--blue2); color:var(--blue2); }
+#event-banner.eli { border-color:var(--gold);  color:var(--gold2); }
+#event-banner .banner-sub { display:block; font-size:12px; letter-spacing:3px; color:var(--text2); margin-top:6px; font-family:'Crimson Text',serif; }
+
+/* Animations cartes */
+@keyframes cardDeal { from{opacity:0;transform:translateY(-18px) scale(0.92)} to{opacity:1;transform:translateY(0) scale(1)} }
+.card-deal { animation:cardDeal 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+@keyframes zoneTarget { 0%,100%{box-shadow:0 0 0 rgba(231,76,60,0)} 50%{box-shadow:0 0 30px 4px rgba(231,76,60,0.5)} }
+.zone-targeted { animation:zoneTarget 0.6s ease 2; border-color:var(--red2) !important; }
+
+::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOBBY ═══ -->
+<div id="lobby-screen" class="screen active">
+  <div class="setup-box">
+    <div class="title-main">TOWER WARS</div>
+    <div class="title-sub">MULTIJOUEUR EN LIGNE</div>
+
+    <div class="setup-label">Votre nom</div>
+    <input class="name-input" id="lobby-name" type="text" placeholder="Entrez votre nom..." maxlength="20"
+           onkeydown="if(event.key==='Enter')createRoom()">
+
+    <button class="btn-start" onclick="createRoom()" style="margin-top:16px">⚔ CRÉER UNE PARTIE</button>
+
+    <div class="lobby-sep"><span>OU</span></div>
+
+    <div class="setup-label">Rejoindre avec un code</div>
+    <div class="code-row">
+      <input class="code-input" id="room-code-input" type="text" maxlength="6" placeholder="Code (6 lettres)"
+             onkeydown="if(event.key==='Enter')joinRoom()" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn-start secondary" onclick="joinRoom()" style="width:auto;padding:10px 20px;margin-top:0">Rejoindre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WAITING ROOM ═══ -->
+<div id="waiting-screen" class="screen">
+  <div class="setup-box" style="width:560px">
+    <div class="title-main" style="font-size:30px">SALLE D'ATTENTE</div>
+    <div class="title-sub" style="margin-bottom:20px">Partagez ce code avec vos amis</div>
+
+    <div class="room-code-display" id="room-code-display">——————</div>
+
+    <div style="margin-bottom:10px">
+      <div class="setup-label">JOUEURS CONNECTÉS</div>
+      <div class="waiting-players" id="waiting-players"></div>
+      <div class="waiting-hint" id="waiting-hint">En attente de joueurs… (2–4 joueurs)</div>
+    </div>
+
+    <!-- Options (hôte seulement) -->
+    <div id="options-section">
+      <div class="setup-label" style="margin-top:16px">OPTIONS DE JEU</div>
+      <div id="options-host">
+        <div class="option-row">
+          <input type="checkbox" id="opt-pact" onchange="onPactToggle()">
+          <label for="opt-pact">
+            <strong>🤝 Pacte de non-agression</strong><br>
+            <span style="font-size:13px">Un joueur réduit à 1 seule tour peut proposer un pacte (2 tours) à un adversaire.</span>
+            <div class="option-sub" id="pact-sub" style="display:none">
+              <label class="opt-radio">
+                <input type="radio" name="pact-breach" value="block" checked onchange="onPactBreachChange(this)"> Rupture impossible
+              </label>
+              <label class="opt-radio">
+                <input type="radio" name="pact-breach" value="penalty" onchange="onPactBreachChange(this)"> Rupture = défense perdue
+              </label>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div id="options-guest" style="display:none">
+        <div class="waiting-hint" id="options-display">Options : défaut</div>
+      </div>
+    </div>
+
+    <button class="btn-start" id="start-btn" onclick="hostStartGame()" style="margin-top:20px;display:none">
+      ⚔ COMMENCER LA PARTIE
+    </button>
+    <div class="waiting-hint" id="start-hint" style="margin-top:12px; display:none">
+      En attente que l'hôte démarre la partie…
+    </div>
+    <button class="btn-start secondary" onclick="leaveRoom()" style="margin-top:10px">Quitter</button>
+  </div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="game-screen" class="screen">
+  <div class="topbar">
+    <div class="topbar-title">⚔ TOWER WARS</div>
+    <div class="turn-info">Tour <span id="turn-number">1</span> — <span id="current-player-name">—</span></div>
+    <div class="topbar-right">
+      <div class="my-turn-badge" id="my-turn-badge">MON TOUR</div>
+      <button class="btn-sm" onclick="openOverlay('rules-modal')">📖 Règles</button>
+    </div>
+  </div>
+  <div class="game-area" id="game-area"></div>
+  <div class="action-panel" id="action-panel">
+    <div class="ap-lbl">ACTION</div>
+    <div class="ap-desc" id="ap-desc">—</div>
+    <div class="ap-btns" id="ap-btns"></div>
+  </div>
+  <button class="log-toggle" id="log-toggle-btn" onclick="document.getElementById('log-panel').classList.toggle('open')">📜 Journal</button>
+  <div class="log-panel" id="log-panel">
+    <div class="log-header">JOURNAL</div>
+    <div class="log-entries" id="log-entries"></div>
+  </div>
+</div>
+
+<!-- ═══ WINNER ═══ -->
+<div id="winner-screen" class="screen">
+  <div class="winner-box">
+    <div class="w-lbl">VICTOIRE</div>
+    <div class="w-name" id="winner-name">—</div>
+    <div class="w-sub">a détruit toutes les tours ennemies</div>
+    <button class="btn-restart" onclick="backToLobby()">↩ NOUVELLE PARTIE</button>
+  </div>
+</div>
+
+<!-- ═══ PACT OVERLAY ═══ -->
+<div class="overlay" id="pact-overlay">
+  <div class="ovbox">
+    <div class="ov-title" style="color:#e8a020">🤝 PROPOSER UN PACTE</div>
+    <div class="ov-info">Tu n'as plus qu'une tour. Choisis un adversaire avec qui conclure une trêve de <strong>2 tours</strong>.</div>
+    <div class="tgt-list" id="pact-tgt-list"></div>
+    <button class="ov-cancel" onclick="closeOverlay('pact-overlay')">Annuler</button>
+  </div>
+</div>
+
+<!-- ═══ TARGET OVERLAY ═══ -->
+<div class="overlay" id="target-overlay">
+  <div class="ovbox">
+    <div class="ov-title">CHOISIR UNE CIBLE</div>
+    <div class="tgt-list" id="tgt-list"></div>
+    <button class="ov-cancel" onclick="closeOverlay('target-overlay')">Annuler</button>
+  </div>
+</div>
+
+<!-- ═══ RULES MODAL ═══ -->
+<div class="overlay" id="rules-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚔ RÈGLES DE TOWER WARS</div>
+    <h4>OBJECTIF</h4><p>Détruire les tours de tous vos adversaires. Dernier survivant = vainqueur.</p>
+    <h4>MISE EN PLACE</h4><p>Chaque joueur pioche 4 cartes, garde les 2 meilleures comme <strong>tours</strong>. Il pioche ensuite 1 carte <strong>défense</strong>.</p>
+    <h4>SON TOUR</h4>
+    <p><strong>⚔ Attaquer</strong> — Force = carte piochée + carte chargée. Si Attaque &gt; Défense : Dégâts = Attaque − Défense. Défense détruite.</p>
+    <p><strong>🛡 Défendre</strong> — Remplacer sa défense par la carte piochée.</p>
+    <p><strong>⚡ Charger</strong> — Mettre la carte de côté (max 1). Ajoutée à la prochaine attaque.</p>
+    <p><strong>🗑 Défausser</strong> — Ignorer la carte piochée.</p>
+    <h4>DÉGÂTS</h4>
+    <p>Appliqués automatiquement sur la tour la plus haute. Si une charge était en cours, elle est perdue.</p>
+    <button class="modal-close" onclick="closeOverlay('rules-modal')">Fermer</button>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<div id="event-banner"></div>
+
+<!-- Socket.io client -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ════════════════════════════════
+//  CONSTANTES
+// ════════════════════════════════
+const SYM    = { hearts:'♥', diamonds:'♦', spades:'♠', clubs:'♣' };
+const VD     = { 11:'J', 12:'Q', 13:'K', 14:'A' };
+const PCOLORS = ['p0','p1','p2','p3'];
+const POSITIONS = { 2:['top','bottom'], 3:['top','left','bottom'], 4:['top','left','right','bottom'] };
+
+// ════════════════════════════════
+//  ÉTAT CLIENT
+// ════════════════════════════════
+const socket = io();
+
+let myId          = null;   // socket.id
+let myIndex       = -1;     // index dans la partie
+let myRoomCode    = null;
+let isHost        = false;
+let G             = null;   // état de jeu (reçu du serveur)
+let knownLogCount = 0;      // pour détecter nouvelles entrées log
+let localPactEnabled = false;
+let localPactBreach  = 'block';
+
+// ════════════════════════════════
+//  SOCKET EVENTS
+// ════════════════════════════════
+socket.on('connect', () => {
+  myId = socket.id;
+});
+
+socket.on('error', ({ message }) => {
+  showNotif(message, 'err');
+});
+
+socket.on('room_created', ({ code, playerIndex }) => {
+  myRoomCode = code;
+  myIndex    = playerIndex;
+  isHost     = true;
+  document.getElementById('room-code-display').textContent = code;
+  showScreen('waiting-screen');
+  updateWaitingRoomUI();
+});
+
+socket.on('room_joined', ({ code, playerIndex }) => {
+  myRoomCode = code;
+  myIndex    = playerIndex;
+  isHost     = false;
+  document.getElementById('room-code-display').textContent = code;
+  showScreen('waiting-screen');
+  updateWaitingRoomUI();
+});
+
+socket.on('room_update', (info) => {
+  renderWaitingRoom(info);
+});
+
+socket.on('game_start', ({ state }) => {
+  G            = state;
+  knownLogCount = 0;
+  showScreen('game-screen');
+  renderAll();
+});
+
+socket.on('game_state', ({ state, banner }) => {
+  G = state;
+  renderAll();
+  if (banner) showBannerFromData(banner);
+  flashNewLogs();
+});
+
+// ════════════════════════════════
+//  LOBBY ACTIONS
+// ════════════════════════════════
+function createRoom() {
+  const name = document.getElementById('lobby-name').value.trim();
+  if (!name) { showNotif('Entrez votre nom.', 'err'); return; }
+  socket.emit('create_room', { name, options: { pactEnabled: false, pactBreach: 'block' } });
+}
+
+function joinRoom() {
+  const name = document.getElementById('lobby-name').value.trim();
+  const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+  if (!name) { showNotif('Entrez votre nom.', 'err'); return; }
+  if (!code || code.length < 4) { showNotif('Entrez un code de salle valide.', 'err'); return; }
+  socket.emit('join_room', { code, name });
+}
+
+function leaveRoom() {
+  myRoomCode = null; myIndex = -1; isHost = false;
+  showScreen('lobby-screen');
+  // The disconnect will be handled by the server
+  window.location.reload();
+}
+
+function hostStartGame() {
+  if (!isHost) return;
+  socket.emit('start_game');
+}
+
+function backToLobby() {
+  window.location.reload();
+}
+
+// ════════════════════════════════
+//  OPTIONS (hôte)
+// ════════════════════════════════
+function onPactToggle() {
+  if (!isHost) return;
+  localPactEnabled = document.getElementById('opt-pact').checked;
+  document.getElementById('pact-sub').style.display = localPactEnabled ? 'flex' : 'none';
+  socket.emit('update_options', { pactEnabled: localPactEnabled, pactBreach: localPactBreach });
+}
+function onPactBreachChange(el) {
+  if (!isHost) return;
+  localPactBreach = el.value;
+  socket.emit('update_options', { pactEnabled: localPactEnabled, pactBreach: localPactBreach });
+}
+
+// ════════════════════════════════
+//  WAITING ROOM RENDER
+// ════════════════════════════════
+function updateWaitingRoomUI() {
+  // Show/hide host vs guest elements
+  document.getElementById('options-host').style.display  = isHost ? '' : 'none';
+  document.getElementById('options-guest').style.display = isHost ? 'none' : '';
+  document.getElementById('start-btn').style.display     = isHost ? '' : 'none';
+  document.getElementById('start-hint').style.display    = isHost ? 'none' : '';
+}
+
+function renderWaitingRoom(info) {
+  const { players, host, options, code } = info;
+
+  // Update my index in case it changed
+  const me = players.find(p => p.id === myId);
+  if (me) myIndex = me.index;
+  isHost = host === myId;
+
+  // Player list
+  const list = document.getElementById('waiting-players');
+  list.innerHTML = '';
+  players.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'waiting-player';
+    div.innerHTML = `
+      <div class="player-color-dot p${p.index}"></div>
+      <div class="waiting-player-name">${escHtml(p.name)}</div>
+      ${p.id === host ? '<div class="waiting-player-tag">HÔTE</div>' : ''}
+      ${p.id === myId ? '<div class="waiting-player-tag" style="color:var(--text2)">VOUS</div>' : ''}
+    `;
+    list.appendChild(div);
+  });
+
+  const hint = document.getElementById('waiting-hint');
+  hint.innerHTML = players.length < 2
+    ? `En attente de joueurs… (<strong>min. 2</strong>)`
+    : `<strong>${players.length}</strong> joueur${players.length > 1 ? 's' : ''} connecté${players.length > 1 ? 's' : ''}`;
+
+  // Start button visibility
+  if (isHost) {
+    const startBtn = document.getElementById('start-btn');
+    startBtn.disabled = players.length < 2;
+    startBtn.style.display = '';
+    document.getElementById('start-hint').style.display = 'none';
+  } else {
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('start-hint').style.display = '';
+  }
+
+  updateWaitingRoomUI();
+
+  // Show options for guests (read-only)
+  if (!isHost && options) {
+    const parts = [];
+    if (options.pactEnabled) parts.push(`🤝 Pacte activé (rupture: ${options.pactBreach === 'block' ? 'bloquée' : 'défense perdue'})`);
+    document.getElementById('options-display').textContent = parts.length ? parts.join(' · ') : 'Options : défaut';
+  }
+}
+
+// ════════════════════════════════
+//  GAME ACTIONS (emit to server)
+// ════════════════════════════════
+function isMyTurn() {
+  if (!G || G.phase === 'ended') return false;
+  const cur = G.players[G.turn];
+  return cur && cur.id === myId;
+}
+
+function doAttack() {
+  if (!isMyTurn()) return;
+  const p = G.players.find(pl => pl.id === myId);
+  const targets = G.players.filter(t => {
+    if (t.eliminated || t.id === myId) return false;
+    if (isPactProtected(p, t) && G.pactBreach === 'block') return false;
+    return true;
+  });
+  if (!targets.length) { showNotif('Aucune cible disponible.', 'err'); return; }
+  openTargetOverlay(targets, tid => {
+    socket.emit('game_action', { type: 'attack', targetId: tid });
+  });
+}
+
+function doDefend() {
+  if (!isMyTurn()) return;
+  socket.emit('game_action', { type: 'defend' });
+}
+
+function doCharge() {
+  if (!isMyTurn()) return;
+  socket.emit('game_action', { type: 'charge' });
+}
+
+function doDiscard() {
+  if (!isMyTurn()) return;
+  socket.emit('game_action', { type: 'discard' });
+}
+
+function doPact() {
+  if (!isMyTurn()) return;
+  const p = G.players.find(pl => pl.id === myId);
+  if (!canProposePact(p)) { showNotif('Pacte impossible dans cette situation.', 'err'); return; }
+  const targets = G.players.filter(t => !t.eliminated && t.id !== myId && !t.pact);
+  if (!targets.length) { showNotif('Aucun adversaire disponible pour un pacte.', 'err'); return; }
+  openPactOverlay(targets, tid => {
+    socket.emit('game_action', { type: 'pact', targetId: tid });
+  });
+}
+
+function doBreakPact() {
+  socket.emit('game_action', { type: 'break_pact' });
+}
+
+// ════════════════════════════════
+//  GAME HELPERS
+// ════════════════════════════════
+function canProposePact(p) {
+  if (!G || !G.pactEnabled)  return false;
+  if (p.towers.length !== 1) return false;
+  if (p.pact)                return false;
+  return true;
+}
+
+function isPactProtected(attacker, target) {
+  if (!G || !G.pactEnabled) return false;
+  if (target.pact   && target.pact.withId   === attacker.id) return true;
+  if (attacker.pact && attacker.pact.withId === target.id)   return true;
+  return false;
+}
+
+// ════════════════════════════════
+//  CARD HELPERS
+// ════════════════════════════════
+function cs(c) {
+  if (!c) return '—';
+  return `${VD[c.val] || c.val}${SYM[c.suit]}`;
+}
+
+function cardHTML(card, extra = '') {
+  if (!card) return `<div class="card empty ${extra}"></div>`;
+  const vd = VD[card.val] || card.val;
+  const sym = SYM[card.suit] || '?';
+  return `<div class="card face-up ${card.suit} ${extra}">
+    <div class="card-corner tl"><span>${vd}</span><span style="font-size:9px">${sym}</span></div>
+    <div class="card-suit-c">${sym}</div>
+    <div class="card-corner br"><span>${vd}</span><span style="font-size:9px">${sym}</span></div>
+  </div>`;
+}
+
+// ════════════════════════════════
+//  RENDER GAME
+// ════════════════════════════════
+function renderAll() {
+  if (!G) return;
+  renderGame();
+  renderActionPanel();
+  syncLog();
+  updateTopbar();
+  updateMyTurnBadge();
+
+  if (G.phase === 'ended' && G.winner) {
+    setTimeout(() => {
+      document.getElementById('winner-name').textContent = G.winner.name;
+      showScreen('winner-screen');
+    }, 1800);
+  }
+}
+
+function updateTopbar() {
+  document.getElementById('turn-number').textContent = G.turnNumber;
+  const cur = G.players[G.turn];
+  document.getElementById('current-player-name').textContent = cur ? cur.name : '—';
+}
+
+function updateMyTurnBadge() {
+  const badge = document.getElementById('my-turn-badge');
+  if (isMyTurn() && G.phase !== 'ended') badge.classList.add('visible');
+  else badge.classList.remove('visible');
+}
+
+function renderGame() {
+  const n    = G.players.length;
+  const area = document.getElementById('game-area');
+  const pos  = POSITIONS[n];
+  area.className = `game-area p${n}`;
+  area.innerHTML = '';
+
+  G.players.forEach((p, i) => {
+    const position = pos[i];
+    const isCur    = (i === G.turn && !p.eliminated && G.phase !== 'ended');
+    const isMe     = (p.id === myId);
+    const totalHP  = p.towers.reduce((s, t) => s + t.val, 0);
+    const chargedV = p.charged ? p.charged.val : 0;
+
+    const pactInfo = (G.pactEnabled && p.pact)
+      ? `<span class="pact-badge">🤝 Pacte ${p.pact.turnsLeft}T</span>` : '';
+
+    // "Rompre le pacte" button: shown only to the protected player during their turn
+    const breakPactBtn = (G.pactEnabled && p.pact && p.pact.role === 'protected' && isMe && isCur)
+      ? `<button onclick="doBreakPact()" style="font-size:11px;padding:2px 8px;background:none;border:1px solid #e8a020;color:#e8a020;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:1px;">Rompre</button>` : '';
+
+    const zone = document.createElement('div');
+    zone.className = `player-zone ${PCOLORS[i]} ${isCur ? 'current-turn' : ''} ${p.eliminated ? 'eliminated' : ''} ${isMe ? 'is-me' : ''} ${G.pactEnabled && p.pact ? 'zone-pacted' : ''}`;
+    zone.dataset.pos = position;
+
+    const meTag = isMe ? '<span class="pz-me-tag">VOUS</span>' : '';
+    const dcTag = p.disconnected ? '<span class="pz-dc-tag">⚠️ déconnecté</span>' : '';
+
+    const header = `<div class="pz-header">
+      <div class="pz-name">${escHtml(p.name)}</div>
+      ${meTag}${dcTag}
+      ${p.eliminated ? '<span class="pz-tag" style="color:var(--red2)">💀 ÉLIMINÉ</span>' : ''}
+      ${pactInfo}${breakPactBtn}
+      ${isCur ? '<span class="pz-active">◆ ACTIF</span>' : ''}
+    </div>`;
+
+    if (p.eliminated) { zone.innerHTML = header; area.appendChild(zone); return; }
+
+    const defVal = p.defense ? p.defense.val : 0;
+    const t0 = p.towers[0] || null;
+    const t1 = p.towers[1] || null;
+    const t0v = t0 ? t0.val : 0;
+    const t1v = t1 ? t1.val : 0;
+
+    const defBlock = `<div class="pz-defense-block" style="display:flex;flex-direction:column;align-items:center;width:142px;">
+      <div class="zone-lbl lbl-def" style="align-self:flex-start">DÉFENSE${defVal ? ` — ${defVal}` : '  —  aucune'}</div>
+      ${cardHTML(p.defense, 'def-card')}
+    </div>`;
+
+    const towersBlock = `<div class="pz-towers-block">
+      <div class="towers-cards">
+        ${cardHTML(t0, `tower${t0 && t0.val / 14 < 0.4 ? ' damaged' : ''}`)}
+        ${cardHTML(t1, `tower${t1 && t1.val / 14 < 0.4 ? ' damaged' : ''}`)}
+      </div>
+      <div class="zone-val gold">Tours : ${t0v} + ${t1v} = ${totalHP} PV</div>
+    </div>`;
+
+    let rightBlock = '';
+
+    if (isCur && isMe && G.drawnCard) {
+      // My turn — show drawn card
+      const totalAtk = G.drawnCard.val + chargedV;
+      let stackHTML = '';
+      if (p.charged) {
+        stackHTML = `<div style="position:relative;width:calc(var(--cw) + 8px);height:var(--ch)">
+          <div style="position:absolute;top:-6px;left:0;z-index:1">${cardHTML(p.charged, 'charge-card')}</div>
+          <div style="position:absolute;top:0;left:8px;z-index:2">${cardHTML(G.drawnCard, 'drawn-card')}</div>
+        </div>`;
+      } else {
+        stackHTML = cardHTML(G.drawnCard, 'drawn-card card-deal');
+      }
+      const piocheLabel = chargedV > 0
+        ? `PIOCHE (${G.drawnCard.val}) + CHARGÉ (${chargedV}) = <strong style="color:var(--red2)">${totalAtk} si attaque</strong>`
+        : `PIOCHE : ${G.drawnCard.val}`;
+      rightBlock = `<div class="attack-block">
+        <div class="zone-lbl lbl-atk">${piocheLabel}</div>
+        ${stackHTML}
+      </div>`;
+    } else if (isCur && !isMe && G.drawnCard) {
+      // Other player's turn — show their drawn card (all info is public)
+      const totalAtk = G.drawnCard.val + chargedV;
+      let stackHTML = '';
+      if (p.charged) {
+        stackHTML = `<div style="position:relative;width:calc(var(--cw) + 8px);height:var(--ch)">
+          <div style="position:absolute;top:-6px;left:0;z-index:1">${cardHTML(p.charged, 'charge-card')}</div>
+          <div style="position:absolute;top:0;left:8px;z-index:2">${cardHTML(G.drawnCard, 'drawn-card')}</div>
+        </div>`;
+      } else {
+        stackHTML = cardHTML(G.drawnCard, 'drawn-card');
+      }
+      const label = chargedV > 0
+        ? `PIOCHE (${G.drawnCard.val}) + CHARGÉ (${chargedV}) = <strong style="color:var(--red2)">${totalAtk}</strong>`
+        : `PIOCHE : ${G.drawnCard.val}`;
+      rightBlock = `<div class="attack-block">
+        <div class="zone-lbl lbl-atk">${label}</div>
+        ${stackHTML}
+      </div>`;
+    } else if (p.charged) {
+      rightBlock = `<div class="attack-block">
+        <div class="zone-lbl lbl-chg">CHARGÉ : ${chargedV}</div>
+        ${cardHTML(p.charged, 'charge-card')}
+      </div>`;
+    }
+
+    zone.innerHTML = `${header}
+      <div class="pz-body">
+        <div class="pz-left">
+          ${defBlock}
+          ${towersBlock}
+        </div>
+        <div class="pz-right" style="display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--border);padding-left:16px;margin-left:4px;">
+          ${rightBlock || '<span style="color:var(--border);font-size:12px">—</span>'}
+        </div>
+      </div>`;
+
+    area.appendChild(zone);
+  });
+}
+
+function renderActionPanel() {
+  const desc = document.getElementById('ap-desc');
+  const btns = document.getElementById('ap-btns');
+
+  if (!G || G.phase === 'ended') {
+    desc.innerHTML = 'Partie terminée.';
+    btns.innerHTML = '';
+    return;
+  }
+
+  if (!isMyTurn()) {
+    const cur = G.players[G.turn];
+    desc.innerHTML = `<span class="waiting-turn">En attente de <strong>${cur ? cur.name : '?'}</strong>…</span>`;
+    btns.innerHTML = '';
+    return;
+  }
+
+  if (!G.drawnCard) {
+    desc.innerHTML = 'En attente de la pioche…';
+    btns.innerHTML = '';
+    return;
+  }
+
+  const p  = G.players.find(pl => pl.id === myId);
+  const cv = p.charged ? p.charged.val : 0;
+  const total = G.drawnCard.val + cv;
+  const ci = cv > 0 ? ` + ${cv} chargé = <strong style="color:var(--red2)">${total} si attaque</strong>` : '';
+  desc.innerHTML = `Carte piochée : <strong>${cs(G.drawnCard)}</strong> (${G.drawnCard.val}${ci}) — Que faire ?`;
+
+  const tgts = G.players.filter(t => !t.eliminated && t.id !== myId);
+  const attackEnabled = tgts.filter(t => !(isPactProtected(p, t) && G.pactBreach === 'block')).length > 0;
+  const pactBtn = canProposePact(p)
+    ? `<button class="btn-act" style="border-color:#e8a020;color:#e8a020;" onclick="doPact()">🤝 Pacte</button>` : '';
+
+  btns.innerHTML = `
+    <button class="btn-act atk" onclick="doAttack()" ${!attackEnabled ? 'disabled' : ''}>⚔ Attaquer</button>
+    <button class="btn-act def" onclick="doDefend()">🛡 Défendre</button>
+    <button class="btn-act chg" onclick="doCharge()">⚡ Charger${p.charged ? ' (remplace)' : ''}</button>
+    <button class="btn-act" style="border-color:#555;color:#888;" onclick="doDiscard()">🗑 Défausser</button>
+    ${pactBtn}`;
+}
+
+// ════════════════════════════════
+//  LOG SYNC
+// ════════════════════════════════
+function syncLog() {
+  if (!G || !G.log) return;
+  if (G.log.length <= knownLogCount) return;
+
+  const el = document.getElementById('log-entries');
+  const newEntries = G.log.slice(knownLogCount);
+  newEntries.forEach(({ msg, type }) => {
+    const d = document.createElement('div');
+    d.className = 'log-entry ' + (type || '');
+    d.innerHTML = msg;
+    el.appendChild(d);
+  });
+  el.scrollTop = el.scrollHeight;
+  knownLogCount = G.log.length;
+}
+
+function flashNewLogs() {
+  if (!G || !G.log) return;
+  if (G.log.length > knownLogCount) {
+    const btn = document.getElementById('log-toggle-btn');
+    if (btn) { btn.classList.add('new-event'); setTimeout(() => btn.classList.remove('new-event'), 2500); }
+  }
+}
+
+// ════════════════════════════════
+//  OVERLAYS
+// ════════════════════════════════
+function openTargetOverlay(targets, cb) {
+  const list = document.getElementById('tgt-list');
+  list.innerHTML = '';
+  for (const t of targets) {
+    const hp   = t.towers.reduce((s, c) => s + c.val, 0);
+    const dStr = t.defense ? `Défense: ${t.defense.val}` : '🔓 Sans défense';
+    const btn  = document.createElement('button');
+    btn.className = 'tgt-btn';
+    btn.innerHTML = `<span>${escHtml(t.name)}</span><span class="tgt-preview">${hp} PV · ${dStr}</span>`;
+    btn.onclick = () => { closeOverlay('target-overlay'); cb(t.id); };
+    list.appendChild(btn);
+  }
+  openOverlay('target-overlay');
+}
+
+function openPactOverlay(targets, cb) {
+  const list = document.getElementById('pact-tgt-list');
+  list.innerHTML = '';
+  for (const t of targets) {
+    const hp  = t.towers.reduce((s, c) => s + c.val, 0);
+    const btn = document.createElement('button');
+    btn.className = 'tgt-btn';
+    btn.style.borderColor = '#e8a020';
+    btn.innerHTML = `<span>${escHtml(t.name)}</span><span class="tgt-preview">${hp} PV${t.pact ? ' 🤝 déjà sous pacte' : ''}</span>`;
+    btn.onclick = () => { closeOverlay('pact-overlay'); cb(t.id); };
+    list.appendChild(btn);
+  }
+  openOverlay('pact-overlay');
+}
+
+// ════════════════════════════════
+//  BANNER (from server event)
+// ════════════════════════════════
+function showBannerFromData(b) {
+  if (!b) return;
+  let html = '', type = '';
+
+  if (b.type === 'attack') {
+    if (b.result === 'blocked') {
+      html = `🛡 Attaque bloquée !<span class="banner-sub">${b.totalAtk} ≤ défense ${b.defVal} de ${escHtml(b.target)}</span>`;
+      type = 'blk';
+    } else {
+      const sub = b.defVal > 0
+        ? `${b.totalAtk} vs défense ${b.defVal} — ${b.dmg} dégât${b.dmg > 1 ? 's' : ''}`
+        : `Sans défense — ${b.dmg} dégât${b.dmg > 1 ? 's' : ''} direct${b.dmg > 1 ? 's' : ''}!`;
+      html = `⚔ ${escHtml(b.attacker)} attaque ${escHtml(b.target)}<span class="banner-sub">${sub}</span>`;
+      type = 'atk';
+    }
+  } else if (b.type === 'defend') {
+    html = `🛡 ${escHtml(b.player)} se défend<span class="banner-sub">Défense ${b.from} → ${b.to}</span>`;
+    type = 'def';
+  } else if (b.type === 'charge') {
+    html = `⚡ ${escHtml(b.player)} charge<span class="banner-sub">Valeur ${b.val} mise en réserve</span>`;
+    type = 'chg';
+  } else if (b.type === 'discard') {
+    html = `🗑 ${escHtml(b.player)} défausse<span class="banner-sub">Aucune action</span>`;
+    type = '';
+  } else if (b.type === 'pact') {
+    html = `🤝 Pacte conclu !<span class="banner-sub">${escHtml(b.from)} ↔ ${escHtml(b.to)} — 2 tours</span>`;
+    type = '';
+  }
+
+  if (html) showBanner(html, type, 1800);
+}
+
+function showBanner(html, type = '', duration = 1400) {
+  return new Promise(resolve => {
+    const el = document.getElementById('event-banner');
+    el.innerHTML = html;
+    el.className = 'show ' + (type || '');
+    clearTimeout(el._t1); clearTimeout(el._t2);
+    el._t1 = setTimeout(() => {
+      el.classList.remove('show');
+      el.classList.add('hide');
+      el._t2 = setTimeout(() => { el.className = ''; resolve(); }, 220);
+    }, duration);
+  });
+}
+
+// ════════════════════════════════
+//  UTILS
+// ════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function openOverlay(id)  { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+let nT;
+function showNotif(msg, type = '') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = 'notif ' + type + ' show';
+  clearTimeout(nT);
+  nT = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
