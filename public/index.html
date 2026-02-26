@@ -130,42 +130,182 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .my-turn-badge.visible { display:inline-block; animation:badgePulse 1s ease infinite; }
 @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
 
-/* ENEMIES AREA */
-.enemies-area { flex:1; display:flex; flex-direction:row; gap:8px; padding:10px 12px; overflow-x:auto; overflow-y:hidden; min-height:0; align-items:stretch; }
+/* GAME LAYOUT - 3 SECTIONS */
+.game-container { display:flex; flex-direction:column; flex:1; min-height:0; }
 
-/* ENEMY ZONE */
-.enemy-zone { flex:1; min-width:175px; max-width:300px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; position:relative; transition:border-color 0.3s,box-shadow 0.3s; }
-.enemy-zone.current-turn { border-color:var(--gold); box-shadow:0 0 20px rgba(201,168,76,0.12); }
-.enemy-zone.eliminated   { opacity:0.35; filter:grayscale(1); }
-.enemy-zone.p0.current-turn { border-color:#c9a84c; box-shadow:0 0 20px rgba(201,168,76,0.15); }
-.enemy-zone.p1.current-turn { border-color:#2980b9; box-shadow:0 0 20px rgba(41,128,185,0.15); }
-.enemy-zone.p2.current-turn { border-color:#27ae60; box-shadow:0 0 20px rgba(39,174,96,0.15); }
-.enemy-zone.p3.current-turn { border-color:#8e44ad; box-shadow:0 0 20px rgba(142,68,173,0.15); }
-.ez-header { display:flex; align-items:center; gap:6px; flex-shrink:0; flex-wrap:wrap; }
-.ez-name { font-family:'Cinzel',serif; font-size:12px; font-weight:600; padding:2px 8px; border-left:3px solid; letter-spacing:1px; }
-.enemy-zone.p0 .ez-name { border-color:#c9a84c; color:#c9a84c; }
-.enemy-zone.p1 .ez-name { border-color:#2980b9; color:#2980b9; }
-.enemy-zone.p2 .ez-name { border-color:#27ae60; color:#27ae60; }
-.enemy-zone.p3 .ez-name { border-color:#8e44ad; color:#8e44ad; }
-.ez-active { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--gold); background:rgba(201,168,76,0.1); padding:2px 6px; border:1px solid rgba(201,168,76,0.3); margin-left:auto; }
-.ez-hp { font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:var(--gold); }
-.ez-cards { display:flex; gap:6px; align-items:flex-end; }
-.ez-stat { font-size:12px; color:var(--text2); }
-.towers-cards { display:flex; gap:6px; }
+/* ADVERSAIRES SECTION (top) */
+.adversaires-section { 
+  flex:0 0 auto; 
+  background:var(--bg2); 
+  border-bottom:2px solid var(--gold); 
+  padding:12px 16px; 
+  overflow-x:auto; 
+  overflow-y:hidden;
+  min-height:140px;
+}
+.adversaires-label { 
+  font-family:'Cinzel',serif; 
+  font-size:10px; 
+  letter-spacing:3px; 
+  color:var(--gold); 
+  margin-bottom:8px; 
+  display:block;
+}
+.adversaires-grid { 
+  display:flex; 
+  gap:12px; 
+  align-items:flex-start;
+}
 
-/* MY ZONE */
-.my-zone { flex-shrink:0; background:var(--bg3); border-top:2px solid var(--gold); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
-.my-zone-header { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.my-name { font-family:'Cinzel',serif; font-size:14px; font-weight:700; padding:2px 10px; border-left:3px solid var(--gold); color:var(--gold); }
-.my-zone-hp { font-family:'Cinzel',serif; font-size:13px; font-weight:600; color:var(--gold); margin-left:auto; }
-.my-cards { display:flex; gap:12px; align-items:flex-end; justify-content:center; flex-wrap:wrap; }
-.card-group { display:flex; flex-direction:column; align-items:center; gap:4px; }
-.card-group-lbl { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--text2); text-align:center; }
+/* ENEMY CARD */
+.enemy-card { 
+  flex:0 0 auto; 
+  width:160px; 
+  background:var(--bg3); 
+  border:1px solid var(--border); 
+  border-radius:4px; 
+  padding:8px; 
+  display:flex; 
+  flex-direction:column; 
+  gap:6px;
+  transition:border-color 0.3s,box-shadow 0.3s;
+}
+.enemy-card.current-turn { 
+  border-color:var(--gold); 
+  box-shadow:0 0 20px rgba(201,168,76,0.15);
+}
+.enemy-card.eliminated { 
+  opacity:0.35; 
+  filter:grayscale(1);
+}
+.enemy-card.p0.current-turn { border-color:#c9a84c; }
+.enemy-card.p1.current-turn { border-color:#2980b9; }
+.enemy-card.p2.current-turn { border-color:#27ae60; }
+.enemy-card.p3.current-turn { border-color:#8e44ad; }
+
+.enemy-card-header { 
+  display:flex; 
+  align-items:center; 
+  gap:6px; 
+  flex-wrap:wrap;
+}
+.enemy-card-name { 
+  font-family:'Cinzel',serif; 
+  font-size:11px; 
+  font-weight:600; 
+  padding:2px 6px; 
+  border-left:2px solid; 
+  letter-spacing:1px;
+}
+.enemy-card.p0 .enemy-card-name { border-color:#c9a84c; color:#c9a84c; }
+.enemy-card.p1 .enemy-card-name { border-color:#2980b9; color:#2980b9; }
+.enemy-card.p2 .enemy-card-name { border-color:#27ae60; color:#27ae60; }
+.enemy-card.p3 .enemy-card-name { border-color:#8e44ad; color:#8e44ad; }
+
+.enemy-card-active { 
+  font-family:'Cinzel',serif; 
+  font-size:8px; 
+  letter-spacing:2px; 
+  color:var(--gold); 
+  background:rgba(201,168,76,0.1); 
+  padding:2px 5px; 
+  border:1px solid rgba(201,168,76,0.3); 
+  margin-left:auto;
+}
+.enemy-card-hp { 
+  font-family:'Cinzel',serif; 
+  font-size:16px; 
+  font-weight:700; 
+  color:var(--gold);
+}
+.enemy-card-towers { 
+  display:flex; 
+  gap:4px;
+}
+.enemy-card-def { 
+  font-size:11px; 
+  color:var(--text2);
+}
+
+/* MIDDLE SECTION - Défense/Charge/Pioche */
+.middle-section { 
+  flex:0 0 auto; 
+  background:var(--bg3); 
+  border-bottom:2px solid var(--gold); 
+  padding:12px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.middle-label { 
+  font-family:'Cinzel',serif; 
+  font-size:10px; 
+  letter-spacing:3px; 
+  color:var(--gold);
+}
+.middle-cards { 
+  display:flex; 
+  gap:16px; 
+  align-items:flex-end; 
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.card-group { 
+  display:flex; 
+  flex-direction:column; 
+  align-items:center; 
+  gap:4px;
+}
+.card-group-lbl { 
+  font-family:'Cinzel',serif; 
+  font-size:9px; 
+  letter-spacing:2px; 
+  color:var(--text2); 
+  text-align:center;
+}
 .card-group-lbl.lbl-def    { color:#5b8dd4; }
-.card-group-lbl.lbl-tour   { color:var(--gold); }
-.card-group-lbl.lbl-pioche { color:var(--red2); }
 .card-group-lbl.lbl-chg    { color:#9b59b6; }
-.card-group-sep { width:1px; background:var(--border); align-self:stretch; margin:0 2px; flex-shrink:0; }
+.card-group-lbl.lbl-pioche { color:var(--red2); }
+.card-group-sep { 
+  width:1px; 
+  background:var(--border); 
+  align-self:stretch; 
+  margin:0 4px; 
+  flex-shrink:0;
+}
+
+/* TOURS SECTION (player towers) */
+.tours-section { 
+  flex:0 0 auto; 
+  background:var(--bg2); 
+  border-bottom:2px solid var(--gold); 
+  padding:12px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.tours-label { 
+  font-family:'Cinzel',serif; 
+  font-size:10px; 
+  letter-spacing:3px; 
+  color:var(--gold);
+}
+.tours-content { 
+  display:flex; 
+  gap:12px; 
+  align-items:flex-end; 
+  justify-content:center;
+}
+.tours-towers { 
+  display:flex; 
+  gap:8px;
+}
+.tours-hp { 
+  font-family:'Cinzel',serif; 
+  font-size:14px; 
+  font-weight:600; 
+  color:var(--gold);
+}
 
 /* CARDS */
 .card { width:var(--cw); height:var(--ch); border-radius:6px; border:1px solid #333; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; font-family:'Crimson Text',serif; user-select:none; flex-shrink:0; }
@@ -184,7 +324,15 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
 .card.empty { border:1px dashed #2a2a3a; background:transparent; opacity:0.2; }
 
 /* ACTION BAR */
-.action-bar { flex-shrink:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px 12px; background:var(--bg2); border-top:2px solid var(--gold); }
+.action-bar { 
+  flex-shrink:0; 
+  display:grid; 
+  grid-template-columns:1fr 1fr; 
+  gap:8px; 
+  padding:12px 16px; 
+  background:var(--bg2); 
+  border-top:2px solid var(--gold);
+}
 .btn-action { padding:14px 8px; border:2px solid; font-family:'Cinzel',serif; font-size:13px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; background:transparent; border-radius:4px; display:flex; align-items:center; justify-content:center; gap:6px; }
 .btn-action.atk { border-color:var(--red2); color:var(--red2); }
 .btn-action.atk:hover:not(:disabled) { background:rgba(231,76,60,0.15); }
@@ -377,9 +525,30 @@ body { font-family:'Crimson Text',Georgia,serif; background:var(--bg); color:var
       <button class="btn-sm" onclick="openOverlay('rules-modal')">📖 Règles</button>
     </div>
   </div>
-  <div class="enemies-area" id="enemies-area"></div>
-  <div class="my-zone" id="my-zone"></div>
-  <div class="action-bar" id="action-bar"></div>
+  
+  <div class="game-container">
+    <!-- ADVERSAIRES SECTION -->
+    <div class="adversaires-section">
+      <span class="adversaires-label">ADVERSAIRES</span>
+      <div class="adversaires-grid" id="adversaires-grid"></div>
+    </div>
+    
+    <!-- MIDDLE SECTION: Défense/Charge/Pioche -->
+    <div class="middle-section">
+      <span class="middle-label">DÉFENSE / CHARGE / PIOCHE</span>
+      <div class="middle-cards" id="middle-cards"></div>
+    </div>
+    
+    <!-- TOURS SECTION -->
+    <div class="tours-section">
+      <span class="tours-label">TOURS</span>
+      <div class="tours-content" id="tours-content"></div>
+    </div>
+    
+    <!-- ACTION BAR -->
+    <div class="action-bar" id="action-bar"></div>
+  </div>
+  
   <button class="log-toggle" id="log-toggle-btn" onclick="document.getElementById('log-panel').classList.toggle('open')">📜 Journal</button>
   <div class="log-panel" id="log-panel">
     <div class="log-header">JOURNAL</div>
@@ -756,14 +925,15 @@ function updateMyTurnBadge() {
 }
 
 function renderGame() {
-  const enemiesEl = document.getElementById('enemies-area');
-  const myZoneEl  = document.getElementById('my-zone');
+  const adversairesEl = document.getElementById('adversaires-grid');
+  const middleEl      = document.getElementById('middle-cards');
+  const toursEl       = document.getElementById('tours-content');
 
   const me      = G.players.find(p => p.id === myId);
   const enemies = G.players.filter(p => p.id !== myId);
 
-  // ── Adversaires (haut) ──
-  enemiesEl.innerHTML = '';
+  // ── ADVERSAIRES (top) ──
+  adversairesEl.innerHTML = '';
   enemies.forEach(p => {
     const i     = G.players.indexOf(p);
     const isCur = (i === G.turn && !p.eliminated && G.phase !== 'ended');
@@ -771,15 +941,16 @@ function renderGame() {
     const pactInfo = (G.pactEnabled && p.pact)
       ? `<span class="pact-badge">🤝 ${p.pact.turnsLeft}T</span>` : '';
 
-    const zone = document.createElement('div');
-    zone.className = `enemy-zone ${PCOLORS[i]} ${isCur ? 'current-turn' : ''} ${p.eliminated ? 'eliminated' : ''} ${G.pactEnabled && p.pact ? 'zone-pacted' : ''}`;
+    const card = document.createElement('div');
+    card.className = `enemy-card ${PCOLORS[i]} ${isCur ? 'current-turn' : ''} ${p.eliminated ? 'eliminated' : ''} ${G.pactEnabled && p.pact ? 'zone-pacted' : ''}`;
 
     if (p.eliminated) {
-      zone.innerHTML = `<div class="ez-header">
-        <div class="ez-name">${escHtml(p.name)}</div>
-        <span style="color:var(--red2);font-size:12px;margin-left:auto">💀 ÉLIMINÉ</span>
-      </div>`;
-      enemiesEl.appendChild(zone);
+      card.innerHTML = `
+        <div class="enemy-card-header">
+          <div class="enemy-card-name">${escHtml(p.name)}</div>
+          <span style="color:var(--red2);font-size:11px;margin-left:auto">💀 ÉLIMINÉ</span>
+        </div>`;
+      adversairesEl.appendChild(card);
       return;
     }
 
@@ -787,134 +958,101 @@ function renderGame() {
     const t1 = p.towers[1] || null;
     const chargedV = p.charged ? p.charged.val : 0;
 
-    const towersHTML = `<div class="ez-cards">
+    const towersHTML = `<div class="enemy-card-towers">
       ${cardHTML(t0, `tower${t0 && t0.val/14 < 0.4 ? ' damaged' : ''}`)}
       ${t1 ? cardHTML(t1, `tower${t1.val/14 < 0.4 ? ' damaged' : ''}`) : ''}
     </div>`;
 
     const defStr = p.defense
-      ? `🛡 Défense : <strong style="color:var(--text)">${p.defense.val}</strong>`
-      : '<span style="color:#555">🔓 Sans défense</span>';
+      ? `🛡 ${p.defense.val}`
+      : '<span style="color:#555">🔓</span>';
 
     let activeHTML = '';
     if (isCur && G.drawnCard) {
       const totalAtk = G.drawnCard.val + chargedV;
       const lbl = chargedV > 0
-        ? `Pioche + chargée = <strong style="color:var(--red2)">${totalAtk}</strong>`
-        : `Pioche : <strong style="color:var(--text)">${G.drawnCard.val}</strong>`;
-      let stack = '';
-      if (p.charged) {
-        stack = `<div style="position:relative;width:calc(var(--cw) + 10px);height:var(--ch)">
-          <div style="position:absolute;top:-5px;left:0;z-index:1">${cardHTML(p.charged,'charge-card')}</div>
-          <div style="position:absolute;top:0;left:10px;z-index:2">${cardHTML(G.drawnCard,'drawn-card')}</div>
-        </div>`;
-      } else {
-        stack = cardHTML(G.drawnCard, 'drawn-card');
-      }
-      activeHTML = `<div style="margin-top:4px">
-        <div class="card-group-lbl lbl-pioche" style="margin-bottom:4px">${lbl}</div>
-        <div style="display:flex;gap:6px;align-items:flex-end">${stack}</div>
-      </div>`;
-    } else if (p.charged) {
-      activeHTML = `<div style="margin-top:4px">
-        <div class="card-group-lbl lbl-chg" style="margin-bottom:4px">⚡ Chargée : ${chargedV}</div>
-        ${cardHTML(p.charged,'charge-card')}
-      </div>`;
+        ? `Pioche+Chargée: <strong style="color:var(--red2)">${totalAtk}</strong>`
+        : `Pioche: <strong style="color:var(--text)">${G.drawnCard.val}</strong>`;
+      activeHTML = `<div style="font-size:10px;color:var(--text2);margin-top:4px">${lbl}</div>`;
     }
 
-    zone.innerHTML = `
-      <div class="ez-header">
-        <div class="ez-name">${escHtml(p.name)}</div>
-        ${p.disconnected ? '<span style="font-size:11px;color:#666" title="Déconnecté">⚠️</span>' : ''}
+    card.innerHTML = `
+      <div class="enemy-card-header">
+        <div class="enemy-card-name">${escHtml(p.name)}</div>
+        ${p.disconnected ? '<span style="font-size:10px;color:#666" title="Déconnecté">⚠️</span>' : ''}
         ${pactInfo}
-        ${isCur ? '<span class="ez-active">◆ ACTIF</span>' : ''}
+        ${isCur ? '<span class="enemy-card-active">◆ ACTIF</span>' : ''}
       </div>
-      <div class="ez-hp">${totalHP} PV</div>
+      <div class="enemy-card-hp">${totalHP} PV</div>
       ${towersHTML}
-      <div class="ez-stat">${defStr}</div>
+      <div class="enemy-card-def">${defStr}</div>
       ${activeHTML}`;
 
-    enemiesEl.appendChild(zone);
+    adversairesEl.appendChild(card);
   });
 
-  // ── Ma zone (centre) ──
-  if (!me) { myZoneEl.innerHTML = ''; return; }
-
-  if (me.eliminated) {
-    myZoneEl.innerHTML = `<div class="my-zone-header">
-      <div class="my-name">${escHtml(me.name)}</div>
-      <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text2);background:var(--bg2);padding:2px 6px;border:1px solid var(--border)">VOUS</span>
-      <span style="color:var(--red2);margin-left:auto">💀 ÉLIMINÉ</span>
+  // ── MIDDLE SECTION: Défense/Charge/Pioche ──
+  if (!me || me.eliminated) {
+    middleEl.innerHTML = '';
+  } else {
+    const myChgV = me.charged ? me.charged.val : 0;
+    
+    // Défense group
+    const defGroup = `<div class="card-group">
+      <div class="card-group-lbl lbl-def">DÉFENSE</div>
+      ${cardHTML(me.defense, 'def-card')}
+      <div style="font-family:'Cinzel',serif;font-size:11px;color:#5b8dd4">${me.defense ? me.defense.val : '—'}</div>
     </div>`;
-    return;
-  }
 
-  const mi       = G.players.indexOf(me);
-  const myHP     = me.towers.reduce((s, t) => s + t.val, 0);
-  const myChgV   = me.charged ? me.charged.val : 0;
-  const myPact   = (G.pactEnabled && me.pact)
-    ? `<span class="pact-badge">🤝 Pacte ${me.pact.turnsLeft}T</span>` : '';
-  const breakBtn = (G.pactEnabled && me.pact && me.pact.role === 'protected' && isMyTurn())
-    ? `<button onclick="doBreakPact()" style="font-size:11px;padding:2px 8px;background:none;border:1px solid #e8a020;color:#e8a020;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:1px;">Rompre</button>` : '';
-
-  // Groupe défense
-  const defGroup = `<div class="card-group">
-    <div class="card-group-lbl lbl-def">DÉFENSE</div>
-    ${cardHTML(me.defense, 'def-card')}
-    <div style="font-family:'Cinzel',serif;font-size:11px;color:#5b8dd4">${me.defense ? me.defense.val : '—'}</div>
-  </div>`;
-
-  // Groupe tours
-  const mt0 = me.towers[0] || null;
-  const mt1 = me.towers[1] || null;
-  const towerGroup = `<div class="card-group">
-    <div class="card-group-lbl lbl-tour">TOURS — ${myHP} PV</div>
-    <div class="towers-cards">
-      ${cardHTML(mt0, `tower${mt0 && mt0.val/14 < 0.4 ? ' damaged' : ''}`)}
-      ${mt1 ? cardHTML(mt1, `tower${mt1.val/14 < 0.4 ? ' damaged' : ''}`) : `<div class="card empty"></div>`}
-    </div>
-  </div>`;
-
-  // Groupe carte active
-  let activeGroup = '';
-  if (isMyTurn() && G.drawnCard) {
-    const total = G.drawnCard.val + myChgV;
-    const lbl = myChgV > 0
-      ? `PIOCHE+CHARGÉE = <strong style="color:var(--red2)">${total}</strong>`
-      : `PIOCHE : ${G.drawnCard.val}`;
-    let stack = '';
+    // Charge group
+    let chargeGroup = '';
     if (me.charged) {
-      stack = `<div style="position:relative;width:calc(var(--cw) + 10px);height:var(--ch)">
-        <div style="position:absolute;top:-5px;left:0;z-index:1">${cardHTML(me.charged,'charge-card')}</div>
-        <div style="position:absolute;top:0;left:10px;z-index:2">${cardHTML(G.drawnCard,'drawn-card card-deal')}</div>
+      chargeGroup = `<div class="card-group">
+        <div class="card-group-lbl lbl-chg">CHARGÉE</div>
+        ${cardHTML(me.charged, 'charge-card')}
+        <div style="font-family:'Cinzel',serif;font-size:11px;color:#9b59b6">${myChgV}</div>
       </div>`;
-    } else {
-      stack = cardHTML(G.drawnCard, 'drawn-card card-deal');
     }
-    activeGroup = `<div class="card-group">
-      <div class="card-group-lbl lbl-pioche">${lbl}</div>
-      ${stack}
-    </div>`;
-  } else if (me.charged) {
-    activeGroup = `<div class="card-group">
-      <div class="card-group-lbl lbl-chg">CHARGÉE : ${myChgV}</div>
-      ${cardHTML(me.charged, 'charge-card')}
-    </div>`;
+
+    // Pioche group (drawn card)
+    let piocheGroup = '';
+    if (isMyTurn() && G.drawnCard) {
+      const total = G.drawnCard.val + myChgV;
+      const lbl = myChgV > 0
+        ? `PIOCHE+CHARGÉE = <strong style="color:var(--red2)">${total}</strong>`
+        : `PIOCHE`;
+      piocheGroup = `<div class="card-group">
+        <div class="card-group-lbl lbl-pioche">${lbl}</div>
+        ${cardHTML(G.drawnCard, 'drawn-card card-deal')}
+        <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--red2)">${G.drawnCard.val}</div>
+      </div>`;
+    }
+
+    const sep = chargeGroup || piocheGroup ? '<div class="card-group-sep"></div>' : '';
+    middleEl.innerHTML = `${defGroup}${sep}${chargeGroup}${piocheGroup ? '<div class="card-group-sep"></div>' + piocheGroup : ''}`;
   }
 
-  myZoneEl.innerHTML = `
-    <div class="my-zone-header">
-      <div class="my-name">${escHtml(me.name)}</div>
-      <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text2);background:var(--bg2);padding:2px 6px;border:1px solid var(--border)">VOUS</span>
-      ${myPact}${breakBtn}
-      <div class="my-zone-hp">${myHP} PV</div>
-    </div>
-    <div class="my-cards">
-      ${defGroup}
-      <div class="card-group-sep"></div>
-      ${towerGroup}
-      ${activeGroup ? `<div class="card-group-sep"></div>${activeGroup}` : ''}
-    </div>`;
+  // ── TOURS SECTION ──
+  if (!me || me.eliminated) {
+    toursEl.innerHTML = '';
+  } else {
+    const myHP = me.towers.reduce((s, t) => s + t.val, 0);
+    const mt0 = me.towers[0] || null;
+    const mt1 = me.towers[1] || null;
+    const myPact = (G.pactEnabled && me.pact)
+      ? `<span class="pact-badge">🤝 Pacte ${me.pact.turnsLeft}T</span>` : '';
+    const breakBtn = (G.pactEnabled && me.pact && me.pact.role === 'protected' && isMyTurn())
+      ? `<button onclick="doBreakPact()" style="font-size:11px;padding:2px 8px;background:none;border:1px solid #e8a020;color:#e8a020;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:1px;">Rompre</button>` : '';
+
+    toursEl.innerHTML = `
+      <div class="tours-towers">
+        ${cardHTML(mt0, `tower${mt0 && mt0.val/14 < 0.4 ? ' damaged' : ''}`)}
+        ${mt1 ? cardHTML(mt1, `tower${mt1.val/14 < 0.4 ? ' damaged' : ''}`) : `<div class="card empty"></div>`}
+      </div>
+      <div class="tours-hp">${myHP} PV</div>
+      ${myPact}
+      ${breakBtn}`;
+  }
 }
 
 function renderActionPanel() {
